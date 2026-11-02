@@ -31,7 +31,12 @@ local.properties
 .cxx/
 captures/
 .externalNativeBuild/
+# ------------------------------------------
+# Distribution & Shortcuts
+# ------------------------------------------
+dist/ExtraScreen-PC/
 *.apk
+*.lnk
 *.aab
 *.jks
 *.keystore
