@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="ExtraScreen - Nhật ký hệ thống (Logs)" 
         Height="500" Width="700"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         Background="#0F172A"
         Foreground="#FFFFFF"
         FontFamily="Cascadia Code, Consolas, Courier New">

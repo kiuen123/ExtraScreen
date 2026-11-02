@@ -20,7 +20,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _controller = new AppController();
-        _logWindow = new LogWindow { Owner = this };
+        _logWindow = new LogWindow();
 
         // Setup NotifyIcon (Tray)
         _notifyIcon = new Forms.NotifyIcon
