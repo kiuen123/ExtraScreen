@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\ExtraScreen.Protocol\ExtraScreen.Protocol.csproj" />
+    <ProjectReference Include="..\ExtraScreen.Usb\ExtraScreen.Usb.csproj" />
+    <ProjectReference Include="..\ExtraScreen.Display\ExtraScreen.Display.csproj" />
+    <ProjectReference Include="..\ExtraScreen.Capture\ExtraScreen.Capture.csproj" />
+    <ProjectReference Include="..\ExtraScreen.Encoding\ExtraScreen.Encoding.csproj" />
+    <ProjectReference Include="..\ExtraScreen.Server\ExtraScreen.Server.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

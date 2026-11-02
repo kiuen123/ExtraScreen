@@ -1,0 +1,55 @@
+# ==========================================
+# ExtraScreen .gitignore
+# ==========================================
+
+# ------------------------------------------
+# .NET / Visual Studio / C#
+# ------------------------------------------
+**/[Bb]in/
+**/[Oo]bj/
+**/.vs/
+**/.vscode/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+TestResults/
+*.resharper
+*.dotCover
+
+# ------------------------------------------
+# Android / Gradle / Kotlin
+# ------------------------------------------
+.gradle/
+**/build/
+!build.gradle*
+!settings.gradle*
+local.properties
+.idea/
+*.iml
+.cxx/
+captures/
+.externalNativeBuild/
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# ------------------------------------------
+# OS & Environment
+# ------------------------------------------
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+.DS_Store
+*.swp
+*.bak
+*~
+
+# ------------------------------------------
+# Logs & Temp
+# ------------------------------------------
+*.log
+*.tmp
+*.temp

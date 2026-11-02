@@ -1,0 +1,318 @@
+<Window x:Class="ExtraScreen.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="ExtraScreen - Cài đặt màn hình phụ USB" 
+        Height="780" Width="820"
+        WindowStartupLocation="CenterScreen"
+        Background="#0F172A"
+        Foreground="#FFFFFF"
+        FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif">
+    
+    <Window.Resources>
+        <!-- Modern Card Style -->
+        <Style x:Key="CardPanel" TargetType="Border">
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <!-- Card Header Style -->
+        <Style x:Key="CardHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <!-- Modern Button Style -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3B82F6"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1D4ED8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#334155"/>
+            <Setter Property="Foreground" Value="#F1F5F9"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#475569"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1E293B"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button">
+            <Setter Property="Background" Value="#EF4444"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#DC2626"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Header Bar -->
+        <Border Grid.Row="0" Margin="0,0,0,16" Padding="0,0,0,10" BorderBrush="#334155" BorderThickness="0,0,0,1">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="📺" FontSize="22" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <TextBlock Text="ExtraScreen" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF"/>
+                        <TextBlock Text="Biến điện thoại thành màn hình phụ qua cáp USB • 1920×1080 @ 60 FPS" FontSize="11" Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button DockPanel.Dock="Right" HorizontalAlignment="Right" Content="📋 Nhật ký (Logs)" Style="{StaticResource SecondaryButton}" Click="BtnLogs_Click"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Main Scrollable Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,10,0">
+
+                <!-- 1. Connected Device Card -->
+                <Border Style="{StaticResource CardPanel}">
+                    <StackPanel>
+                        <TextBlock Text="📱 THIẾT BỊ ĐANG KẾT NỐI" Style="{StaticResource CardHeader}"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Background="#334155" CornerRadius="8" Width="44" Height="44" Margin="0,0,14,0">
+                                <TextBlock Text="📱" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtDeviceName" Text="Chưa kết nối điện thoại" FontSize="15" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                <TextBlock x:Name="TxtDeviceDetails" Text="Cổng: 127.0.0.1:7070 (adb reverse) • Cắm cáp USB để kích hoạt" FontSize="12" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <Border Grid.Column="2" x:Name="BadgeStatus" Background="#334155" CornerRadius="12" Padding="10,4" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtBadgeStatus" Text="CHỜ KẾT NỐI" FontSize="11" FontWeight="Bold" Foreground="#94A3B8"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Telemetry Stats Bar -->
+                        <Border Background="#0F172A" CornerRadius="6" Padding="12,8" Margin="0,14,0,14" BorderBrush="#334155" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="🟢 FPS: " Foreground="#94A3B8" FontSize="12"/>
+                                    <TextBlock x:Name="TxtStatFps" Text="60.0 / 60" FontWeight="Bold" Foreground="#10B981" FontSize="12"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="⚡ Độ trễ: " Foreground="#94A3B8" FontSize="12"/>
+                                    <TextBlock x:Name="TxtStatLatency" Text="~38 ms" FontWeight="Bold" Foreground="#38BDF8" FontSize="12"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="📶 Bitrate: " Foreground="#94A3B8" FontSize="12"/>
+                                    <TextBlock x:Name="TxtStatBitrate" Text="20.0 Mbps" FontWeight="Bold" Foreground="#F59E0B" FontSize="12"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Device Action Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="🔄 Khởi động lại luồng" Style="{StaticResource SecondaryButton}" Margin="0,0,10,0" Click="BtnRestartStream_Click"/>
+                            <Button Content="🔌 Ngắt kết nối" Style="{StaticResource DangerButton}" Click="BtnDisconnect_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- 2. Display Configuration Card -->
+                <Border Style="{StaticResource CardPanel}">
+                    <StackPanel>
+                        <TextBlock Text="🖥️ CẤU HÌNH MÀN HÌNH HIỂN THỊ" Style="{StaticResource CardHeader}"/>
+
+                        <TextBlock Text="Chế độ hiển thị:" FontSize="13" FontWeight="Medium" Margin="0,0,0,8"/>
+                        <RadioButton x:Name="RbExtend" Content="Màn hình mở rộng (Extend Display) - [Khuyến nghị]" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,0,4" Checked="DisplayMode_Changed"/>
+                        <TextBlock Text="Tạo một màn hình ảo độc lập trên Windows để kéo thả cửa sổ ứng dụng sang." FontSize="11" Foreground="#94A3B8" Margin="22,0,0,10"/>
+
+                        <RadioButton x:Name="RbMirror" Content="Màn hình phản chiếu (Mirror Display)" Foreground="#FFFFFF" Margin="0,0,0,4" Checked="DisplayMode_Changed"/>
+                        <TextBlock Text="Phản chiếu màn hình chính có sẵn (Dùng khi máy bị chặn cài driver ảo)." FontSize="11" Foreground="#94A3B8" Margin="22,0,0,14"/>
+
+                        <!-- Resolution Badges Locked -->
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                <TextBlock Text="Độ phân giải video:" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                <Border Background="#0F172A" CornerRadius="6" Padding="10,8" BorderBrush="#334155" BorderThickness="1">
+                                    <TextBlock Text="🔒 1920 × 1080 (16:9 Full HD)" FontWeight="SemiBold" Foreground="#E2E8F0"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                <TextBlock Text="Tần số quét:" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                <Border Background="#0F172A" CornerRadius="6" Padding="10,8" BorderBrush="#334155" BorderThickness="1">
+                                    <TextBlock Text="🔒 60 Hz (Cố định)" FontWeight="SemiBold" Foreground="#E2E8F0"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Độ thu phóng Windows (Scaling):" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,6"/>
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="RbScale100" Content="100% (Tiêu chuẩn)" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,20,0" Checked="Scaling_Changed"/>
+                            <RadioButton x:Name="RbScale125" Content="125% (Chữ to dễ đọc hơn trên điện thoại nhỏ)" Foreground="#FFFFFF" Checked="Scaling_Changed"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- 3. Encoding & Stream Quality Card -->
+                <Border Style="{StaticResource CardPanel}">
+                    <StackPanel>
+                        <TextBlock Text="⚡ MÃ HÓA &amp; CHẤT LƯỢNG STREAM" Style="{StaticResource CardHeader}"/>
+
+                        <TextBlock Text="Chuẩn nén Video (Codec):" FontSize="13" FontWeight="Medium" Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Background="#0F172A" CornerRadius="6" Padding="10" Margin="0,0,8,0" BorderBrush="#334155" BorderThickness="1">
+                                <StackPanel>
+                                    <RadioButton x:Name="RbH264" Content="H.264 High (Mặc định)" IsChecked="True" FontWeight="SemiBold" Foreground="#FFFFFF" Checked="Codec_Changed"/>
+                                    <TextBlock Text="Độ trễ thấp nhất (&lt;40ms), tương thích 100% mọi thiết bị Android." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" Margin="20,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Background="#0F172A" CornerRadius="6" Padding="10" Margin="8,0,0,0" BorderBrush="#334155" BorderThickness="1">
+                                <StackPanel>
+                                    <RadioButton x:Name="RbH265" Content="H.265 / HEVC (Nâng cao)" FontWeight="SemiBold" Foreground="#FFFFFF" Checked="Codec_Changed"/>
+                                    <TextBlock Text="Tối ưu độ nét chữ ở bitrate thấp, yêu cầu GPU và điện thoại có phần cứng HEVC." FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" Margin="20,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <TextBlock Text="Bộ mã hóa phần cứng (Hardware Encoder):" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,6"/>
+                        <ComboBox x:Name="CmbEncoders" Background="#0F172A" Foreground="#FFFFFF" BorderBrush="#334155" Padding="8,6" Margin="0,0,0,14" SelectionChanged="CmbEncoders_SelectionChanged"/>
+
+                        <DockPanel Margin="0,0,0,4">
+                            <TextBlock Text="Băng thông truyền tải (Bitrate):" FontSize="12" Foreground="#94A3B8"/>
+                            <TextBlock x:Name="TxtBitrateValue" Text="20 Mbps" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Right"/>
+                        </DockPanel>
+                        <Slider x:Name="SliderBitrate" Minimum="10" Maximum="30" Value="20" TickFrequency="2" IsSnapToTickEnabled="True" Margin="0,0,0,6" ValueChanged="SliderBitrate_ValueChanged"/>
+                        <DockPanel>
+                            <TextBlock Text="10 Mbps (Tiết kiệm pin)" FontSize="10" Foreground="#64748B"/>
+                            <TextBlock Text="20 Mbps (Khuyên dùng)" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center"/>
+                            <TextBlock Text="30 Mbps (Cực nét)" FontSize="10" Foreground="#64748B" HorizontalAlignment="Right"/>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- 4. System Status & Automation Card -->
+                <Border Style="{StaticResource CardPanel}">
+                    <StackPanel>
+                        <TextBlock Text="🔧 TRẠNG THÁI HỆ THỐNG &amp; TỰ ĐỘNG HÓA" Style="{StaticResource CardHeader}"/>
+
+                        <CheckBox x:Name="ChkAutoOpenApp" Content="Tự động mở app trên điện thoại khi cắm cáp USB (Plug &amp; Play)" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,0,8" Click="AutoSettings_Click"/>
+                        <CheckBox x:Name="ChkAutoVirtualDisplay" Content="Tự động bật màn hình ảo khi cắm cáp, tắt khi rút cáp" IsChecked="True" Foreground="#FFFFFF" Margin="0,0,0,14" Click="AutoSettings_Click"/>
+
+                        <Border Background="#0F172A" CornerRadius="6" Padding="12" BorderBrush="#334155" BorderThickness="1" Margin="0,0,0,14">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="Driver màn hình ảo:" Foreground="#94A3B8" FontSize="12"/>
+                                    <TextBlock x:Name="TxtDriverStatus" Text="✅ Sẵn sàng (Parsec / IddCx VDD)" FontWeight="SemiBold" Foreground="#10B981" HorizontalAlignment="Right" FontSize="12"/>
+                                </Grid>
+                                <Grid>
+                                    <TextBlock Text="Dịch vụ ADB USB:" Foreground="#94A3B8" FontSize="12"/>
+                                    <TextBlock x:Name="TxtAdbStatus" Text="✅ Sẵn sàng (Bundled adb.exe)" FontWeight="SemiBold" Foreground="#10B981" HorizontalAlignment="Right" FontSize="12"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="📁 Hướng dẫn cài đặt Driver" Style="{StaticResource SecondaryButton}" Click="BtnDriverGuide_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Bottom Footer -->
+        <Border Grid.Row="2" Margin="0,12,0,0" Padding="0,8,0,0" BorderBrush="#334155" BorderThickness="0,1,0,0">
+            <DockPanel>
+                <TextBlock Text="Phiên bản 1.0.0 • Kết nối nội bộ qua cáp USB Type-C (adb reverse) • Không cần Internet" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
+                <Button Content="Thu nhỏ vào khay (Tray)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Right" Padding="12,6" Click="BtnMinimizeToTray_Click"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

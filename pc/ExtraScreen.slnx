@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ExtraScreen.App/ExtraScreen.App.csproj" />
+    <Project Path="src/ExtraScreen.Capture/ExtraScreen.Capture.csproj" />
+    <Project Path="src/ExtraScreen.Core/ExtraScreen.Core.csproj" />
+    <Project Path="src/ExtraScreen.Display/ExtraScreen.Display.csproj" />
+    <Project Path="src/ExtraScreen.Encoding/ExtraScreen.Encoding.csproj" />
+    <Project Path="src/ExtraScreen.Protocol/ExtraScreen.Protocol.csproj" />
+    <Project Path="src/ExtraScreen.Server/ExtraScreen.Server.csproj" />
+    <Project Path="src/ExtraScreen.Usb/ExtraScreen.Usb.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ExtraScreen.Tests/ExtraScreen.Tests.csproj" />
+  </Folder>
+</Solution>

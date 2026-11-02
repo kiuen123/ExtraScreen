@@ -1,0 +1,30 @@
+<Window x:Class="ExtraScreen.App.LogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ExtraScreen - Nhật ký hệ thống (Logs)" 
+        Height="500" Width="700"
+        WindowStartupLocation="CenterOwner"
+        Background="#0F172A"
+        Foreground="#FFFFFF"
+        FontFamily="Cascadia Code, Consolas, Courier New">
+    
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="📋 NHẬT KÝ HOẠT ĐỘNG THỜI GIAN THỰC" FontSize="13" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,0,10"/>
+
+        <Border Grid.Row="1" Background="#020617" CornerRadius="6" BorderBrush="#334155" BorderThickness="1" Padding="10">
+            <TextBox x:Name="TxtLogs" Background="Transparent" Foreground="#E2E8F0" BorderThickness="0" 
+                     IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
+        </Border>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Xóa nhật ký" Margin="0,0,10,0" Padding="12,6" Background="#334155" Foreground="#FFFFFF" BorderThickness="0" Click="BtnClear_Click"/>
+            <Button Content="Đóng" Padding="16,6" Background="#2563EB" Foreground="#FFFFFF" BorderThickness="0" Click="BtnClose_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

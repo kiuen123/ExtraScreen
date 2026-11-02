@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExtraScreen - UI Design Mockup & Interactive Prototype</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#2563EB',
+            brandDark: '#1D4ED8',
+            surfaceDark: '#0F172A',
+            cardDark: '#1E293B',
+            cardBorder: '#334155'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .font-win {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Windows 11 Mica & Glass effects */
+    .win-acrylic {
+      background: rgba(30, 41, 59, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .phone-screen {
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+    /* Pulse glow */
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+    .animate-glow {
+      animation: pulse-glow 2.5s infinite ease-in-out;
+    }
+    /* Hide scrollbars for clean presentation */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 font-bold text-lg">
+        📺
+      </div>
+      <div>
+        <h1 class="font-bold text-base tracking-wide flex items-center gap-2">
+          ExtraScreen
+          <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">UI Mockup v1.0</span>
+        </h1>
+        <p class="text-xs text-slate-400">Thiết kế giao diện PC (Windows) & Mobile (Android) theo <a href="plan.md" class="text-blue-400 hover:underline">plan.md</a></p>
+      </div>
+    </div>
+
+    <!-- Tab View Switcher -->
+    <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-sm">
+      <button id="tabBtnPC" onclick="switchMainTab('pc')" class="px-4 py-1.5 rounded-lg font-medium transition-all bg-blue-600 text-white shadow-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+        Phần 1: Giao diện PC (Windows)
+      </button>
+      <button id="tabBtnMobile" onclick="switchMainTab('mobile')" class="px-4 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+        Phần 2: Giao diện Mobile (Android)
+      </button>
+      <button id="tabBtnAll" onclick="switchMainTab('all')" class="px-4 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+        Xem đồng thời cả hai
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto p-6 space-y-12">
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: PC WINDOWS INTERFACE -->
+    <!-- ========================================== -->
+    <section id="sectionPC" class="space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+            Phần 1: Giao diện Ứng dụng PC (Windows 11)
+          </h2>
+          <p class="text-sm text-slate-400">Khay hệ thống (System Tray), Menu điều khiển nhanh và Cửa sổ Cài đặt chi tiết (WPF Fluent Design)</p>
+        </div>
+        <div class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-lg border border-slate-700">
+          Cố định: 1920×1080 @ 60 FPS • USB adb reverse 127.0.0.1:7070
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- PC Settings Window (Desktop Window Mockup) -->
+        <div class="lg:col-span-8 bg-slate-900 border border-slate-700/80 rounded-2xl overflow-hidden shadow-2xl font-win">
+          <!-- Window Titlebar -->
+          <div class="bg-slate-800/90 border-b border-slate-700 px-4 py-2.5 flex items-center justify-between select-none">
+            <div class="flex items-center space-x-2.5">
+              <span class="text-blue-400 text-sm">📺</span>
+              <span class="text-xs font-semibold text-slate-200">ExtraScreen - Cài đặt màn hình phụ USB</span>
+            </div>
+            <div class="flex items-center space-x-2 text-slate-400 text-xs">
+              <button class="w-7 h-6 hover:bg-slate-700 rounded flex items-center justify-center transition">─</button>
+              <button class="w-7 h-6 hover:bg-slate-700 rounded flex items-center justify-center transition">口</button>
+              <button class="w-7 h-6 hover:bg-red-600 hover:text-white rounded flex items-center justify-center transition">✕</button>
+            </div>
+          </div>
+
+          <!-- Window Content Area -->
+          <div class="p-6 space-y-6 max-h-[750px] overflow-y-auto">
+            
+            <!-- Card 1: Connected Device Status -->
+            <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20">
+                  📱
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-white text-base">Samsung Galaxy S23 Ultra</span>
+                    <span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-0.5 rounded-full border border-emerald-500/40 flex items-center gap-1 font-medium">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Đang stream
+                    </span>
+                  </div>
+                  <div class="text-xs text-slate-400 mt-1 flex flex-wrap gap-x-3 gap-y-1 font-mono">
+                    <span>SN: R5CT109ABCD</span>
+                    <span>•</span>
+                    <span>Kênh: USB (127.0.0.1:7070)</span>
+                    <span>•</span>
+                    <span class="text-emerald-400 font-semibold">Độ trễ: 38 ms</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2 w-full sm:w-auto">
+                <button class="flex-1 sm:flex-initial text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg transition font-medium text-slate-200">
+                  🔄 Khởi động lại
+                </button>
+                <button class="flex-1 sm:flex-initial text-xs bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 px-3 py-2 rounded-lg transition font-medium">
+                  🔌 Ngắt kết nối
+                </button>
+              </div>
+            </div>
+
+            <!-- Card 2: Display Configuration -->
+            <div class="bg-slate-800/40 border border-slate-700/80 rounded-xl p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                  <span class="text-blue-400">🖥️</span> Chế độ màn hình hiển thị
+                </h3>
+                <span class="text-xs text-slate-400">Virtual Display Driver (IddCx)</span>
+              </div>
+
+              <!-- Extend vs Mirror Radios -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="border-2 border-blue-500 bg-blue-500/10 p-3.5 rounded-xl flex items-start space-x-3 cursor-pointer transition">
+                  <input type="radio" name="displayMode" checked class="mt-1 text-blue-600 focus:ring-0">
+                  <div>
+                    <div class="text-sm font-semibold text-white flex items-center gap-2">
+                      Màn hình mở rộng (Extend)
+                      <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded font-bold">CHUẨN</span>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-0.5">Tạo màn hình ảo thứ 2 độc lập trên Windows để kéo thả cửa sổ.</div>
+                  </div>
+                </label>
+                <label class="border border-slate-700 bg-slate-800/40 hover:bg-slate-800 p-3.5 rounded-xl flex items-start space-x-3 cursor-pointer transition">
+                  <input type="radio" name="displayMode" class="mt-1 text-blue-600 focus:ring-0">
+                  <div>
+                    <div class="text-sm font-semibold text-slate-300">Phản chiếu (Mirror mode)</div>
+                    <div class="text-xs text-slate-400 mt-0.5">Dự phòng stream màn hình có sẵn khi máy bị chặn cài driver.</div>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Fixed Specs (Readonly) -->
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                  <span class="text-xs text-slate-400 block">Độ phân giải màn hình ảo</span>
+                  <span class="text-sm font-bold text-slate-200 font-mono flex items-center gap-1.5 mt-0.5">
+                    1920 × 1080 (16:9)
+                    <span class="text-xs text-blue-400" title="Cố định">🔒</span>
+                  </span>
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                  <span class="text-xs text-slate-400 block">Tần số quét</span>
+                  <span class="text-sm font-bold text-emerald-400 font-mono flex items-center gap-1.5 mt-0.5">
+                    60 Hz (Cố định)
+                    <span class="text-xs text-blue-400" title="Cố định">🔒</span>
+                  </span>
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800 col-span-2 sm:col-span-1">
+                  <span class="text-xs text-slate-400 block">Windows Scaling</span>
+                  <select class="mt-0.5 w-full bg-slate-800 text-xs text-slate-200 border border-slate-700 rounded p-1 focus:outline-none">
+                    <option selected>100% (Mặc định)</option>
+                    <option>125% (Chữ to dễ đọc hơn)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Codec & Encoding Configuration -->
+            <div class="bg-slate-800/40 border border-slate-700/80 rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <span class="text-indigo-400">⚡</span> Cấu hình nén Video & Mã hóa phần cứng
+              </h3>
+
+              <!-- Codec Selection -->
+              <div>
+                <label class="text-xs text-slate-400 font-medium block mb-2">Chuẩn nén Video (Codec):</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <!-- H.264 Option -->
+                  <label class="border-2 border-blue-500 bg-blue-500/10 p-3 rounded-xl flex items-start space-x-3 cursor-pointer">
+                    <input type="radio" name="videoCodec" checked class="mt-1">
+                    <div>
+                      <div class="text-sm font-semibold text-white">H.264 / AVC (Mặc định)</div>
+                      <div class="text-xs text-slate-400 mt-0.5">Độ trễ thấp nhất (&lt;40ms), tương thích phần cứng 100%.</div>
+                      <div class="text-[11px] text-blue-400 mt-1 font-mono">20 Mbps (Khuyên dùng)</div>
+                    </div>
+                  </label>
+
+                  <!-- H.265 Option -->
+                  <label class="border border-slate-700 bg-slate-800/50 hover:bg-slate-800 p-3 rounded-xl flex items-start space-x-3 cursor-pointer">
+                    <input type="radio" name="videoCodec" class="mt-1">
+                    <div>
+                      <div class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        H.265 / HEVC (Nâng cao)
+                        <span class="text-[10px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.2 rounded border border-indigo-500/40">SẮC NÉT</span>
+                      </div>
+                      <div class="text-xs text-slate-400 mt-0.5">Chữ nét hơn ở bitrate thấp (12 Mbps), giảm size keyframe.</div>
+                      <div class="text-[11px] text-emerald-400 mt-1 font-mono">Đã xác nhận HW hỗ trợ ✓</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Hardware Encoder selection & Bitrate Slider -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label class="text-xs text-slate-400 font-medium block mb-1.5">Bộ mã hóa GPU (Tự nhận diện):</label>
+                  <select class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 font-mono focus:border-blue-500">
+                    <option selected>NVIDIA NVENC (GeForce RTX 3060)</option>
+                    <option>Intel QuickSync (QSV)</option>
+                    <option>AMD AMF</option>
+                    <option>Software (libx264 - CPU fallback)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div class="flex justify-between items-center mb-1.5">
+                    <label class="text-xs text-slate-400 font-medium">Băng thông (Bitrate):</label>
+                    <span id="bitrateVal" class="text-xs font-bold text-blue-400 font-mono">20 Mbps</span>
+                  </div>
+                  <input type="range" min="10" max="30" value="20" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" oninput="document.getElementById('bitrateVal').innerText = this.value + ' Mbps'">
+                  <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+                    <span>10 Mbps</span>
+                    <span>20 Mbps (Chuẩn)</span>
+                    <span>30 Mbps (Siêu nét)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Automation & Services -->
+            <div class="bg-slate-800/40 border border-slate-700/80 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-300">
+              <div class="flex items-center space-x-3">
+                <input type="checkbox" checked id="autoLaunch" class="rounded text-blue-600 focus:ring-0">
+                <label for="autoLaunch" class="cursor-pointer">
+                  Tự động mở app trên điện thoại & bật màn hình ảo khi cắm cáp USB (Plug & Play)
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="text-slate-400 font-mono">ADB Server: Port 7070 Sẵn sàng</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- System Tray Menu & Notification Showcase (Right Column) -->
+        <div class="lg:col-span-4 space-y-6">
+          
+          <!-- System Tray Popup Menu -->
+          <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-xl">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+              <span>Khay hệ thống (System Tray Menu)</span>
+              <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">Chuột phải</span>
+            </div>
+
+            <!-- Tray Context Menu Window -->
+            <div class="win-acrylic rounded-xl p-2 font-win text-xs text-slate-200 space-y-1 shadow-2xl border border-slate-700/80">
+              <div class="px-3 py-2 border-b border-slate-700/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-base">📺</span>
+                  <span class="font-bold">ExtraScreen</span>
+                </div>
+                <span class="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 1080p60
+                </span>
+              </div>
+              <div class="px-3 py-1.5 text-slate-400 text-[11px]">
+                Thiết bị: Samsung Galaxy S23 Ultra
+              </div>
+              <div class="h-px bg-slate-700/60 my-1"></div>
+              <button class="w-full text-left px-3 py-2 hover:bg-blue-600 hover:text-white rounded-lg transition flex items-center justify-between font-medium">
+                <span>⚙️ Mở Cài đặt...</span>
+                <span class="text-[10px] text-slate-400">Ctrl+,</span>
+              </button>
+              <button class="w-full text-left px-3 py-2 hover:bg-slate-700 rounded-lg transition flex items-center gap-2">
+                <span>✓ Màn hình mở rộng (Extend)</span>
+              </button>
+              <button class="w-full text-left px-3 py-2 hover:bg-slate-700 rounded-lg transition flex items-center gap-2 text-slate-400">
+                <span class="ml-4">Màn hình phản chiếu (Mirror)</span>
+              </button>
+              <button class="w-full text-left px-3 py-2 hover:bg-slate-700 rounded-lg transition flex items-center gap-2">
+                <span>🔄 Khởi động lại luồng stream</span>
+              </button>
+              <button class="w-full text-left px-3 py-2 hover:bg-slate-700 rounded-lg transition flex items-center gap-2 text-rose-400 hover:text-rose-300">
+                <span>🔌 Ngắt kết nối cáp USB</span>
+              </button>
+              <div class="h-px bg-slate-700/60 my-1"></div>
+              <button class="w-full text-left px-3 py-2 hover:bg-rose-600 hover:text-white rounded-lg transition flex items-center gap-2 text-rose-400">
+                <span>✕ Thoát ứng dụng</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Windows Toast Notification Preview -->
+          <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-xl space-y-3">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Thông báo Windows (Toast Notification)
+            </div>
+            <div class="bg-slate-800/90 border border-amber-500/40 rounded-xl p-3.5 shadow-lg relative font-win">
+              <div class="flex items-start space-x-3">
+                <div class="text-2xl mt-0.5">⚠️</div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-amber-300">ExtraScreen - Cần cấp quyền USB</span>
+                    <span class="text-[10px] text-slate-400">Vừa xong</span>
+                  </div>
+                  <p class="text-xs text-slate-300 mt-1">
+                    Hãy mở điện thoại và chọn <strong>"Cho phép gỡ lỗi USB"</strong> để bắt đầu xuất màn hình phụ.
+                  </p>
+                  <div class="mt-3 flex items-center space-x-2">
+                    <button class="text-[11px] bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded font-medium transition">
+                      Đã cho phép - Thử lại
+                    </button>
+                    <button class="text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2.5 py-1 rounded transition">
+                      Hướng dẫn
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: MOBILE ANDROID INTERFACE -->
+    <!-- ========================================== -->
+    <section id="sectionMobile" class="space-y-6 pt-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-3 gap-3">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+            Phần 2: Giao diện Ứng dụng Mobile (Android)
+          </h2>
+          <p class="text-sm text-slate-400">Thiết kế Jetpack Compose, SurfaceView Fullscreen Immersive, HUD Overlay đo đạc độ trễ và FPS</p>
+        </div>
+
+        <!-- Android Sub-Screen Selector -->
+        <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs">
+          <button id="mScreenBtnWaiting" onclick="switchMobileScreen('waiting')" class="px-3 py-1.5 rounded-lg font-medium transition-all bg-emerald-600 text-white">
+            1. Chờ cắm USB
+          </button>
+          <button id="mScreenBtnOnboarding" onclick="switchMobileScreen('onboarding')" class="px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all">
+            2. Hướng dẫn bật USB
+          </button>
+          <button id="mScreenBtnStream" onclick="switchMobileScreen('stream')" class="px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all">
+            3. Đang Stream 1080p
+          </button>
+          <button id="mScreenBtnOverlay" onclick="switchMobileScreen('overlay')" class="px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all">
+            4. HUD Overlay (Chạm 2 lần)
+          </button>
+        </div>
+      </div>
+
+      <!-- Android Device Frame Mockup Container -->
+      <div class="flex justify-center items-center py-4">
+        
+        <!-- ========================================== -->
+        <!-- MOCKUP A: LANDSCAPE VIEW (For Stream & Waiting) -->
+        <!-- ========================================== -->
+        <div id="deviceLandscape" class="w-full max-w-4xl bg-slate-900 border-4 border-slate-800 rounded-[36px] p-3 shadow-2xl relative">
+          <!-- Outer Phone Bezel & Camera Hole -->
+          <div class="absolute left-6 top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-black rounded-full border border-slate-700/80 z-40"></div>
+          
+          <!-- Inner Screen Area (16:9 or 20:9 with letterboxing) -->
+          <div class="bg-black rounded-[26px] overflow-hidden relative aspect-[19.5/9] w-full flex items-center justify-center border border-slate-800 select-none">
+            
+            <!-- Letterbox Left -->
+            <div class="hidden sm:block w-8 sm:w-12 h-full bg-black shrink-0 border-r border-slate-900/60 z-30"></div>
+
+            <!-- Central 16:9 Content Canvas -->
+            <div class="h-full w-full max-w-[85%] bg-slate-950 relative flex items-center justify-center overflow-hidden">
+              
+              <!-- SCREEN 1: WAITING SCREEN -->
+              <div id="mViewWaiting" class="flex flex-col items-center justify-center text-center p-6 space-y-4">
+                <div class="relative flex items-center justify-center">
+                  <div class="w-24 h-24 rounded-full bg-blue-500/20 animate-ping absolute"></div>
+                  <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-3xl shadow-xl shadow-blue-500/30">
+                    🔌
+                  </div>
+                </div>
+
+                <div>
+                  <h3 class="text-xl font-bold text-white tracking-wide">SẴN SÀNG KẾT NỐI</h3>
+                  <p class="text-xs text-slate-400 max-w-md mt-1">
+                    Cắm cáp USB nối điện thoại với máy tính để bắt đầu hiển thị màn hình phụ. Không cần cài đặt thêm.
+                  </p>
+                </div>
+
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2.5 flex items-center gap-4 text-xs font-mono text-slate-300">
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> H.264 HW ✓</span>
+                  <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> H.265 HW ✓</span>
+                  <span class="text-slate-400">Port: 127.0.0.1:7070</span>
+                </div>
+
+                <div class="flex items-center space-x-2 text-xs text-blue-400 font-medium pt-1">
+                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                  <span>Đang dò tìm tín hiệu USB từ máy tính...</span>
+                </div>
+              </div>
+
+              <!-- SCREEN 2: ONBOARDING SCREEN -->
+              <div id="mViewOnboarding" class="hidden flex-col items-center justify-center p-6 text-center space-y-3 w-full max-w-xl">
+                <div class="text-2xl">📱 ⚙️ 💻</div>
+                <h3 class="text-base font-bold text-white">KÍCH HOẠT GỠ LỖI USB (CHỈ LẦN ĐẦU)</h3>
+                
+                <div class="grid grid-cols-3 gap-2.5 text-left w-full">
+                  <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-lg">
+                    <span class="text-blue-400 font-bold text-xs">Bước 1</span>
+                    <p class="text-[11px] text-slate-300 mt-1">Cài đặt > Thông tin đt > Nhấn 7 lần vào "Số hiệu bản dựng".</p>
+                  </div>
+                  <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-lg">
+                    <span class="text-blue-400 font-bold text-xs">Bước 2</span>
+                    <p class="text-[11px] text-slate-300 mt-1">Vào Tùy chọn nhà phát triển > Bật "Gỡ lỗi qua USB".</p>
+                  </div>
+                  <div class="bg-slate-900/90 border border-slate-800 p-2.5 rounded-lg">
+                    <span class="text-blue-400 font-bold text-xs">Bước 3</span>
+                    <p class="text-[11px] text-slate-300 mt-1">Cắm cáp & Tích "Luôn cho phép" khi hiện hộp thoại.</p>
+                  </div>
+                </div>
+
+                <div class="pt-2 flex items-center gap-3">
+                  <button class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-2 rounded-lg font-semibold shadow-lg shadow-blue-600/30 transition">
+                    Mở Cài đặt Nhà phát triển ngay
+                  </button>
+                  <button onclick="switchMobileScreen('waiting')" class="text-xs text-slate-400 hover:text-white px-3 py-2">
+                    Tôi đã bật rồi →
+                  </button>
+                </div>
+              </div>
+
+              <!-- SCREEN 3: STREAM SCREEN (Windows Desktop Rendered) -->
+              <div id="mViewStream" class="hidden w-full h-full relative bg-cover bg-center" style="background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);">
+                <!-- Windows 11 Taskbar simulation -->
+                <div class="absolute bottom-0 inset-x-0 h-9 bg-slate-900/90 border-t border-slate-700/60 flex items-center justify-between px-3 text-[11px] z-20">
+                  <div class="flex items-center space-x-2">
+                    <span class="text-blue-400 font-bold">田</span>
+                    <span class="bg-slate-800 px-2 py-0.5 rounded text-slate-300">🔍 Search</span>
+                    <span class="hover:bg-slate-800 px-1.5 py-0.5 rounded cursor-default">📁</span>
+                    <span class="hover:bg-slate-800 px-1.5 py-0.5 rounded cursor-default">🌐</span>
+                    <span class="hover:bg-slate-800 px-1.5 py-0.5 rounded cursor-default">💻</span>
+                  </div>
+                  <div class="flex items-center space-x-2 text-slate-400 font-mono text-[10px]">
+                    <span>14:02</span>
+                    <span>•</span>
+                    <span>1920×1080@60Hz</span>
+                  </div>
+                </div>
+
+                <!-- Windows Desktop Window Sample (VSCode / Terminal on 2nd screen) -->
+                <div class="absolute top-6 left-8 right-8 bottom-14 bg-slate-900/95 border border-slate-700 rounded-lg shadow-2xl overflow-hidden flex flex-col">
+                  <div class="bg-slate-800 px-3 py-1 border-b border-slate-700 flex items-center justify-between text-[11px] text-slate-300">
+                    <div class="flex items-center space-x-2 font-mono">
+                      <span>📄 main.cpp - ExtraScreen Engine</span>
+                    </div>
+                    <div class="flex space-x-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+                      <span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+                      <span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+                    </div>
+                  </div>
+                  <div class="p-4 font-mono text-xs text-slate-300 space-y-1.5 leading-relaxed">
+                    <p><span class="text-purple-400">#include</span> <span class="text-emerald-400">&lt;d3d11.h&gt;</span></p>
+                    <p><span class="text-purple-400">#include</span> <span class="text-emerald-400">&lt;dxgi1_2.h&gt;</span></p>
+                    <p class="text-slate-500">// ExtraScreen Virtual Display - Pipeline 60 FPS cố định</p>
+                    <p><span class="text-blue-400">int</span> <span class="text-yellow-300">StartStreamPipeline</span>() {</p>
+                    <p class="pl-4 text-emerald-400">AcquireNextFrame(16.67ms); <span class="text-slate-500">// GPU Direct Texture</span></p>
+                    <p class="pl-4 text-blue-300">EncodeNVENC(1920, 1080, 60fps);</p>
+                    <p class="pl-4 text-slate-300">SendOverUsbSocket(7070);</p>
+                    <p class="text-blue-400">}</p>
+                  </div>
+                </div>
+
+                <!-- Mouse Cursor Overlay -->
+                <div class="absolute top-1/2 left-1/3 pointer-events-none z-30 drop-shadow-md">
+                  <svg class="w-5 h-5 text-white" fill="white" stroke="black" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path d="M4 0l16 12.279-6.951 1.17 4.325 8.817-3.596 1.734-4.35-8.879-5.428 5.428z"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- SCREEN 4: HUD OVERLAY (Floating on top of Stream) -->
+              <div id="mViewOverlay" class="hidden w-full h-full relative bg-slate-950">
+                <!-- Stream Background behind overlay -->
+                <div class="absolute inset-0 opacity-40 bg-cover bg-center flex items-center justify-center font-mono text-slate-500 text-sm">
+                  [ Luồng video 1920x1080 @ 60 FPS đang hiển thị ]
+                </div>
+
+                <!-- Floating HUD Box (Top-Right / Glassmorphic) -->
+                <div class="absolute top-4 right-4 bg-slate-900/90 border border-slate-700/80 backdrop-blur-xl rounded-2xl p-4 shadow-2xl font-mono text-xs w-72 space-y-3 z-40">
+                  <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <div class="flex items-center gap-1.5 font-sans font-bold text-white text-xs">
+                      <span>⚡ EXTRA HUD</span>
+                      <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded border border-emerald-500/30">ONLINE</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 font-sans">Chạm đúp để ẩn</span>
+                  </div>
+
+                  <!-- Real-time Metrics Grid -->
+                  <div class="grid grid-cols-2 gap-2 text-[11px]">
+                    <div class="bg-slate-800/80 p-2 rounded-lg">
+                      <span class="text-slate-400 block text-[10px] font-sans">Tốc độ khung hình</span>
+                      <span class="font-bold text-emerald-400 text-sm">60.0 FPS</span>
+                    </div>
+                    <div class="bg-slate-800/80 p-2 rounded-lg">
+                      <span class="text-slate-400 block text-[10px] font-sans">Độ trễ màn hình</span>
+                      <span class="font-bold text-blue-400 text-sm">38 ms</span>
+                    </div>
+                    <div class="bg-slate-800/80 p-2 rounded-lg">
+                      <span class="text-slate-400 block text-[10px] font-sans">Băng thông USB</span>
+                      <span class="font-bold text-slate-200 text-sm">19.8 Mbps</span>
+                    </div>
+                    <div class="bg-slate-800/80 p-2 rounded-lg">
+                      <span class="text-slate-400 block text-[10px] font-sans">Chuẩn giải mã</span>
+                      <span class="font-bold text-indigo-400 text-sm">H.264 HW</span>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons -->
+                  <div class="space-y-1.5 pt-1 font-sans">
+                    <button class="w-full text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 py-1.5 rounded-lg text-slate-200 transition font-medium flex items-center justify-center gap-1.5">
+                      🔄 Làm mới khung hình (IDR Keyframe)
+                    </button>
+                    <button onclick="switchMobileScreen('waiting')" class="w-full text-xs bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 py-1.5 rounded-lg transition font-medium flex items-center justify-center gap-1.5">
+                      🔌 Ngắt kết nối Stream
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Toast tip -->
+                <div class="absolute bottom-4 left-6 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-full text-[11px] text-slate-400 flex items-center gap-2">
+                  <span>💡 Thao tác chạm chỉ điều khiển Menu app, không điều khiển chuột PC.</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Letterbox Right -->
+            <div class="hidden sm:block w-8 sm:w-12 h-full bg-black shrink-0 border-l border-slate-900/60 z-30"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Footer Notes -->
+    <footer class="border-t border-slate-800 pt-6 pb-12 text-center text-xs text-slate-500 space-y-1">
+      <p>ExtraScreen UI Specification & Design System • Dựa trên kiến trúc kỹ thuật trong <a href="plan.md" class="text-blue-400 underline">plan.md</a></p>
+      <p>File tài liệu chi tiết: <a href="UI_DESIGN.md" class="text-slate-400 underline">UI_DESIGN.md</a> • Tác quyền © 2026 ExtraScreen Team</p>
+    </footer>
+
+  </main>
+
+  <!-- Interactive JavaScript logic -->
+  <script>
+    function switchMainTab(tab) {
+      const secPC = document.getElementById('sectionPC');
+      const secMobile = document.getElementById('sectionMobile');
+      const btnPC = document.getElementById('tabBtnPC');
+      const btnMobile = document.getElementById('tabBtnMobile');
+      const btnAll = document.getElementById('tabBtnAll');
+
+      [btnPC, btnMobile, btnAll].forEach(b => {
+        b.className = "px-4 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all flex items-center gap-2";
+      });
+
+      if (tab === 'pc') {
+        secPC.classList.remove('hidden');
+        secMobile.classList.add('hidden');
+        btnPC.className = "px-4 py-1.5 rounded-lg font-medium transition-all bg-blue-600 text-white shadow-sm flex items-center gap-2";
+      } else if (tab === 'mobile') {
+        secPC.classList.add('hidden');
+        secMobile.classList.remove('hidden');
+        btnMobile.className = "px-4 py-1.5 rounded-lg font-medium transition-all bg-blue-600 text-white shadow-sm flex items-center gap-2";
+      } else {
+        secPC.classList.remove('hidden');
+        secMobile.classList.remove('hidden');
+        btnAll.className = "px-4 py-1.5 rounded-lg font-medium transition-all bg-blue-600 text-white shadow-sm flex items-center gap-2";
+      }
+    }
+
+    function switchMobileScreen(screen) {
+      const views = {
+        waiting: document.getElementById('mViewWaiting'),
+        onboarding: document.getElementById('mViewOnboarding'),
+        stream: document.getElementById('mViewStream'),
+        overlay: document.getElementById('mViewOverlay')
+      };
+
+      const btns = {
+        waiting: document.getElementById('mScreenBtnWaiting'),
+        onboarding: document.getElementById('mScreenBtnOnboarding'),
+        stream: document.getElementById('mScreenBtnStream'),
+        overlay: document.getElementById('mScreenBtnOverlay')
+      };
+
+      Object.keys(views).forEach(k => {
+        views[k].classList.add('hidden');
+        views[k].classList.remove('flex');
+        btns[k].className = "px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-all";
+      });
+
+      views[screen].classList.remove('hidden');
+      views[screen].classList.add('flex');
+      btns[screen].className = "px-3 py-1.5 rounded-lg font-medium transition-all bg-emerald-600 text-white";
+    }
+  </script>
+</body>
+</html>
