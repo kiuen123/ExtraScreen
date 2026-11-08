@@ -13,6 +13,8 @@ public class AppSettings
     public int ScalingPercentage { get; set; } = 100; // 100% or 125%
     public bool AutoOpenAppOnPlug { get; set; } = true;
     public bool AutoVirtualDisplay { get; set; } = true;
+    public bool EnableTouchback { get; set; } = true;
+    public bool EnableAudio { get; set; } = true;
     public string SelectedEncoderType { get; set; } = "Nvenc";
 
     public static string GetSettingsPath()

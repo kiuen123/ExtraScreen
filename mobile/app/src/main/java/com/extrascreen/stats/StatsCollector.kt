@@ -14,12 +14,20 @@ class StatsCollector(
 
     var currentFps: Double = 60.0
         private set
+    var currentDecodeMs: Double = 6.0
+        private set
     var currentLatencyMs: Double = 38.0
         private set
     var currentBitrateMbps: Double = 20.0
         private set
 
     private var lastPingTimestampUs: Long = 0
+
+    fun onFrameDecoded(decodeMs: Double) {
+        if (decodeMs in 0.1..200.0) {
+            currentDecodeMs = currentDecodeMs * 0.8 + decodeMs * 0.2
+        }
+    }
 
     fun onFrameReceived(bytesLength: Int) {
         frameCount.incrementAndGet()
@@ -35,7 +43,7 @@ class StatsCollector(
             lastCalculationTime = now
 
             // Send stats to PC
-            onSendPacket(Packet.createStats(currentFps, 8.0, currentLatencyMs))
+            onSendPacket(Packet.createStats(currentFps, currentDecodeMs, currentLatencyMs))
 
             // Trigger next ping
             sendPing()

@@ -67,6 +67,10 @@ data class Packet(
             return Packet(ProtocolConstants.TYPE_REQUEST_KEYFRAME, 0L, ByteArray(0))
         }
 
+        fun createFrameAck(timestampUs: Long = 0L): Packet {
+            return Packet(ProtocolConstants.TYPE_FRAME_ACK, timestampUs, ByteArray(0))
+        }
+
         fun createStats(fps: Double, decodeMs: Double, rttMs: Double): Packet {
             val json = JSONObject().apply {
                 put("fps", fps)
@@ -83,6 +87,23 @@ data class Packet(
             }
             val bytes = json.toString().toByteArray(Charsets.UTF_8)
             return Packet(ProtocolConstants.TYPE_BYE, 0L, bytes)
+        }
+
+        fun createTouch(
+            action: Byte,
+            pointerId: Int,
+            normX: Float,
+            normY: Float,
+            pressure: Float = 1.0f,
+            timestampUs: Long = 0L
+        ): Packet {
+            val buf = ByteBuffer.allocate(17).order(ByteOrder.LITTLE_ENDIAN)
+            buf.put(action)
+            buf.putInt(pointerId)
+            buf.putFloat(normX)
+            buf.putFloat(normY)
+            buf.putFloat(pressure)
+            return Packet(ProtocolConstants.TYPE_TOUCH, timestampUs, buf.array())
         }
 
         fun write(stream: OutputStream, packet: Packet) {

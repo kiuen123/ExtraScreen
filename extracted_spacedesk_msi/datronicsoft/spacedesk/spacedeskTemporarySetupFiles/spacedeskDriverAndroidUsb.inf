@@ -1,0 +1,129 @@
+;
+; spacedeskDriverAndroidUsb.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=USBDevice
+ClassGuid={88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Provider=%ManufacturerName%
+CatalogFile=spacedeskDriverAndroidUsb.cat
+DriverVer = 12/01/2025,1.0.486.13
+PnpLockDown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+spacedeskAndroidUsb_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames.x86]
+1 = %DiskName%,,,\x86
+
+[SourceDisksNames.amd64]
+1 = %DiskName%,,,\amd64
+
+[SourceDisksNames.arm64]
+1 = %DiskName%,,,\arm64
+
+[SourceDisksFiles]
+spacedeskDriverAndroidUsb.sys  = 1,,
+;
+
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTx86,ntamd64,ntarm64.10.0...22000
+
+[Standard.NTx86]
+; Android Open Access Protocol  
+%spacedeskAndroidUsb.DeviceDesc%=spacedeskAndroidUsb_Device, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D00
+%spacedeskAndroidUsb.DeviceDesc%=spacedeskAndroidUsb_Device, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D01&MI_00
+%spacedeskAndroidUsb.DeviceDesc%=spacedesk_CCGPDriverInstall, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D01
+
+[Standard.NTamd64]
+; Android Open Access Protocol  
+%spacedeskAndroidUsb.DeviceDesc%=spacedeskAndroidUsb_Device, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D00
+%spacedeskAndroidUsb.DeviceDesc%=spacedeskAndroidUsb_Device, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D01&MI_00
+%spacedeskAndroidUsb.DeviceDesc%=spacedesk_CCGPDriverInstall, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D01
+
+[Standard.ntarm64.10.0...22000]
+; Android Open Access Protocol  
+%spacedeskAndroidUsb.DeviceDesc%=spacedeskAndroidUsb_Device, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D00
+%spacedeskAndroidUsb.DeviceDesc%=spacedeskAndroidUsb_Device, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D01&MI_00
+%spacedeskAndroidUsb.DeviceDesc%=spacedesk_CCGPDriverInstall, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001, USB\VID_18D1&PID_2D01
+
+[spacedeskAndroidUsb_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+spacedeskDriverAndroidUsb.sys
+
+[spacedeskAndroidUsb_Device.NT.HW]
+AddReg=spacedeskAndroidUsb_AddReg
+
+[spacedeskAndroidUsb_AddReg]
+; By default, USBDevice class uses iProduct descriptor to name the device in
+; Device Manager on Windows 8 and higher.
+; Uncomment for this device to use %DeviceName% on Windows 8 and higher:
+HKR,,FriendlyName,,%spacedeskAndroidUsb.DeviceDesc%
+
+;-------------- Service installation
+[spacedeskAndroidUsb_Device.NT.Services]
+AddService = spacedeskAndroidUsb,%SPSVCINST_ASSOCSERVICE%, spacedeskAndroidUsb_Service_Inst
+
+; -------------- spacedeskAndroidUsb driver install sections
+[spacedeskAndroidUsb_Service_Inst]
+DisplayName    = %spacedeskAndroidUsb.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\spacedeskDriverAndroidUsb.sys
+
+;
+;--- spacedeskAndroidUsb_Device Coinstaller installation ------
+;
+
+[spacedeskAndroidUsb_Device.NT.CoInstallers]
+AddReg=spacedeskAndroidUsb_Device_CoInstaller_AddReg
+CopyFiles=spacedeskAndroidUsb_Device_CoInstaller_CopyFiles
+
+[spacedeskAndroidUsb_Device_CoInstaller_AddReg]
+;
+
+
+[spacedeskAndroidUsb_Device_CoInstaller_CopyFiles]
+;
+
+
+[spacedeskAndroidUsb_Device.NT.Wdf]
+KmdfService =  spacedeskAndroidUsb, spacedeskAndroidUsb_wdfsect
+[spacedeskAndroidUsb_wdfsect]
+KmdfLibraryVersion = 1.15
+
+; ======== USBCCGP ==========================================
+
+[spacedesk_CCGPDriverInstall.NT]
+Include=usb.inf
+Needs=Composite.Dev.NT
+
+[spacedesk_CCGPDriverInstall.NT.HW]
+AddReg=spacedeskAndroidUsbComposite_AddReg
+
+[spacedesk_CCGPDriverInstall.NT.Services]
+Include=usb.inf
+Needs=Composite.Dev.NT.Services
+
+[spacedeskAndroidUsbComposite_AddReg]
+HKR,,FriendlyName,,%spacedeskAndroidUsb.CompositeDeviceDesc%
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="datronicsoft Technology GmbH"
+ClassName="Universal Serial Bus devices"
+DiskName = "spacedeskDriverAndroidUsb Installation Disk"
+spacedeskAndroidUsb.DeviceDesc = "spacedesk Android USB Device"
+spacedeskAndroidUsb.SVCDESC = "spacedesk Android USB Device Service"
+spacedeskAndroidUsb.CompositeDeviceDesc = "USB Composite Device (spacedesk)"
+REG_MULTI_SZ = 0x00010000

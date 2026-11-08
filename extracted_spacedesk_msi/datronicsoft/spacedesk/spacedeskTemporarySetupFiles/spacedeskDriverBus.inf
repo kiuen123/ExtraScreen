@@ -1,0 +1,83 @@
+; spacedeskDriverBus.inf
+; Copyright © 2025 datronicsoft;
+; All rights reserved
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System
+ClassGuid={4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider=%ManufacturerName%
+CatalogFile=spacedeskDriverBus.cat
+DriverVer = 02/16/2026,1.0.491.50
+PnpLockDown = 1
+
+[ControlFlags]
+ExcludeFromSelect =*
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames.x86]
+1 = %DiskName%,,,\x86
+
+[SourceDisksNames.amd64]
+1 = %DiskName%,,,\amd64
+
+[SourceDisksNames.arm64]
+1 = %DiskName%,,,\arm64
+
+[SourceDisksFiles]
+spacedeskDriverBus.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTx86,ntamd64,ntarm64.10.0...22000
+
+[Standard.NTx86]
+%spacedeskDriverBus.DeviceDesc%=spacedeskDriverBus_Device, Root\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_BUS_0001
+[Standard.NtAMD64]
+%spacedeskDriverBus.DeviceDesc%=spacedeskDriverBus_Device, Root\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_BUS_0001
+[Standard.ntarm64.10.0...22000]
+%spacedeskDriverBus.DeviceDesc%=spacedeskDriverBus_Device, Root\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_BUS_0001
+
+[spacedeskDriverBus_Device.NT]
+CopyFiles=Drivers_Dir
+
+[spacedeskDriverBus_Device.NT.HW]
+AddReg=spacedeskDriverBus_Device.NT.AddReg
+
+[spacedeskDriverBus_Device.NT.AddReg]
+HKR,,DeviceCharacteristics,0x10001,0x0100         ; Use same security checks on relative opens
+HKR,,Security,,"D:P(A;;GA;;;BA)(A;;GA;;;SY)"      ; Allow generic-all access to Built-in administrators and Local system 
+;HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GA;;;WD)(A;;GA;;;RC)"  ;for lower security
+
+[Drivers_Dir]
+spacedeskDriverBus.sys
+
+;-------------- Service installation
+[spacedeskDriverBus_Device.NT.Services]
+AddService = spacedeskDriverBus,%SPSVCINST_ASSOCSERVICE%, spacedeskDriverBus_Service_Inst
+
+; -------------- spacedeskDriverBus driver install sections
+[spacedeskDriverBus_Service_Inst]
+DisplayName    = %spacedeskDriverBus.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\spacedeskDriverBus.sys
+
+[spacedeskDriverBus_Device.NT.Wdf]
+KmdfService =  spacedeskDriverBus, spacedeskDriverBus_wdfsect
+
+[spacedeskDriverBus_wdfsect]
+KmdfLibraryVersion = 1.15
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="datronicsoft"
+DiskName = "spacedesk virtual Bus Installation Disk #1"
+spacedeskDriverBus.DeviceDesc = "spacedesk virtual Bus"
+spacedeskDriverBus.SVCDESC = "spacedesk virtual Bus"

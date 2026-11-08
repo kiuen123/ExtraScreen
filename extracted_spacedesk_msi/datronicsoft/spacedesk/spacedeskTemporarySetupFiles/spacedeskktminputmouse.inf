@@ -1,0 +1,83 @@
+;
+; spacedeskKtmInputMouse.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class = Mouse
+ClassGuid = {4d36e96f-e325-11ce-bfc1-08002be10318}
+Provider=%ManufacturerName%
+CatalogFile=spacedeskKtmInputmouse.cat
+DriverVer = 10/09/2024,1.0.462.11
+
+[ControlFlags]
+ExcludeFromSelect =*
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+[SourceDisksNames.x86]
+1 = %DiskName%,,,\x86
+
+[SourceDisksNames.amd64]
+1 = %DiskName%,,,\amd64
+
+[SourceDisksNames.arm64]
+1 = %DiskName%,,,\arm64
+
+[SourceDisksFiles]
+spacedeskKtmInput.sys  = 1,
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTx86,NTamd64,ntarm64.10.0...22000
+
+[Standard.NTx86]
+%spacedeskKtmInputMouse.DeviceDesc%=Device_Install_Mouse, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT&PID_SPACEDESK_VIRTUAL_MOUSE_0001
+
+[Standard.NTamd64]
+%spacedeskKtmInputMouse.DeviceDesc%=Device_Install_Mouse, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT&PID_SPACEDESK_VIRTUAL_MOUSE_0001
+
+[Standard.ntarm64.10.0...22000]
+%spacedeskKtmInputMouse.DeviceDesc%=Device_Install_Mouse, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT&PID_SPACEDESK_VIRTUAL_MOUSE_0001
+
+;-------------- Device Installation Mouse
+[Device_Install_Mouse.NT]
+CopyFiles=Copy_Target_Source
+
+[Copy_Target_Source]
+spacedeskKtmInputMouse.sys, spacedeskKtmInput.sys
+
+;-------------- Service installation
+[Device_Install_Mouse.NT.Services]
+AddService = spacedeskKtmInputMouse,%SPSVCINST_ASSOCSERVICE%, spacedeskKtmInput_Service_Inst_Mouse
+
+; -------------- spacedeskKtmInput driver install sections
+[spacedeskKtmInput_Service_Inst_Mouse]
+DisplayName    = %spacedeskKtmInputMouse.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\spacedeskKtmInputMouse.sys
+
+[Device_Install_Mouse.NT.Wdf]
+KmdfService =  spacedeskKtmInputMouse, spacedeskKtmInput_wdfsect
+[spacedeskKtmInput_wdfsect]
+KmdfLibraryVersion = 1.9
+
+; -------------- Device Cleanup
+[Drivers_Dir]
+spacedeskKtmInputMouse.sys
+
+[DefaultUninstall]
+DelFiles=Drivers_Dir
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="datronicsoft" ;TODO: Replace with your manufacturer name
+DiskName = "spacedeskKtmInput Installation Disk"
+spacedeskKtmInputMouse.DeviceDesc = "spacedesk Mouse"
+spacedeskKtmInputMouse.SVCDESC = "spacedeskKtmInputMouse Service"

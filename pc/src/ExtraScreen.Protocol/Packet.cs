@@ -81,12 +81,67 @@ public sealed class Packet
         };
     }
 
+    public static Packet CreateFrameAck(long timestampUs = 0)
+    {
+        return new Packet
+        {
+            Type = ProtocolConstants.TypeFrameAck,
+            TimestampUs = timestampUs,
+            Payload = Array.Empty<byte>()
+        };
+    }
+
+    public static Packet CreateTouch(byte action, int pointerId, float normX, float normY, float pressure = 1.0f, long timestampUs = 0)
+    {
+        byte[] payload = new byte[17];
+        payload[0] = action;
+        BinaryPrimitives.WriteInt32LittleEndian(payload.AsSpan(1, 4), pointerId);
+        BinaryPrimitives.WriteSingleLittleEndian(payload.AsSpan(5, 4), normX);
+        BinaryPrimitives.WriteSingleLittleEndian(payload.AsSpan(9, 4), normY);
+        BinaryPrimitives.WriteSingleLittleEndian(payload.AsSpan(13, 4), pressure);
+
+        return new Packet
+        {
+            Type = ProtocolConstants.TypeTouch,
+            TimestampUs = timestampUs,
+            Payload = payload
+        };
+    }
+
+    public static TouchEvent ParseTouch(byte[] payload)
+    {
+        if (payload.Length < 17)
+        {
+            throw new InvalidDataException("Invalid touch packet length: expected at least 17 bytes");
+        }
+
+        byte action = payload[0];
+        int pointerId = BinaryPrimitives.ReadInt32LittleEndian(payload.AsSpan(1, 4));
+        float normX = BinaryPrimitives.ReadSingleLittleEndian(payload.AsSpan(5, 4));
+        float normY = BinaryPrimitives.ReadSingleLittleEndian(payload.AsSpan(9, 4));
+        float pressure = BinaryPrimitives.ReadSingleLittleEndian(payload.AsSpan(13, 4));
+
+        return new TouchEvent(action, pointerId, normX, normY, pressure);
+    }
+
+    public static Packet CreateAudioFrame(byte[] audioData, long timestampUs = 0)
+    {
+        return new Packet
+        {
+            Type = ProtocolConstants.TypeAudioFrame,
+            TimestampUs = timestampUs,
+            Payload = audioData
+        };
+    }
+
     public T? DeserializeJson<T>()
     {
         if (Payload.Length == 0) return default;
         return JsonSerializer.Deserialize<T>(Payload);
     }
 }
+
+public readonly record struct TouchEvent(byte Action, int PointerId, float NormX, float NormY, float Pressure);
 
 public static class PacketSerializer
 {

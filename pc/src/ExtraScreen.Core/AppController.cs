@@ -1,4 +1,7 @@
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using ExtraScreen.Capture;
 using ExtraScreen.Display;
 using ExtraScreen.Encoding;
 using ExtraScreen.Protocol;
@@ -15,6 +18,7 @@ public enum OverallStatus
     Error           // Red: Disconnected or driver error
 }
 
+[SupportedOSPlatform("windows")]
 public class AppController : IDisposable
 {
     public AppSettings Settings { get; }
@@ -25,7 +29,10 @@ public class AppController : IDisposable
     public StreamServer Server { get; }
 
     private FFmpegStreamEncoder? _encoder;
+    private WasapiLoopbackCapture? _audioCapture;
+    private DxgiOutputMonitor? _outputMonitor;
     private AdbDeviceInfo? _connectedUsbDevice;
+    private DisplayOutputInfo? _activeDisplayInfo;
 
     public OverallStatus Status { get; private set; } = OverallStatus.Idle;
     public string StatusMessage { get; private set; } = "Chưa kết nối điện thoại";
@@ -57,6 +64,7 @@ public class AppController : IDisposable
         Server.ClientConnected += OnClientConnected;
         Server.ClientDisconnected += OnClientDisconnected;
         Server.StatsReceived += OnStatsReceived;
+        Server.TouchReceived += OnTouchReceived;
         Server.KeyframeRequested += OnKeyframeRequested;
         Server.LogMessage += msg => Log(msg);
     }
@@ -79,6 +87,12 @@ public class AppController : IDisposable
 
     private void OnUsbDeviceConnected(AdbDeviceInfo device)
     {
+        // If already connected and client is streaming or connecting, don't restart pipeline
+        if (_connectedUsbDevice?.Serial == device.Serial && (Server.IsClientConnected || _encoder != null))
+        {
+            return;
+        }
+
         _connectedUsbDevice = device;
         Log($"Phát hiện thiết bị USB: {device.DisplayName} ({device.Serial})");
 
@@ -130,6 +144,12 @@ public class AppController : IDisposable
 
     private void OnUsbDeviceDisconnected(string serial)
     {
+        // Only react if the disconnected device matches our currently connected device
+        if (_connectedUsbDevice == null || !_connectedUsbDevice.Serial.Equals(serial, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         Log($"Ngắt kết nối cáp USB: {serial}");
         _connectedUsbDevice = null;
         StopStreaming();
@@ -189,6 +209,19 @@ public class AppController : IDisposable
         _encoder?.RequestKeyframe();
     }
 
+    private void OnTouchReceived(TouchEvent touch)
+    {
+        if (!Settings.EnableTouchback || _activeDisplayInfo == null) return;
+        try
+        {
+            InputInjector.InjectTouch(touch, _activeDisplayInfo);
+        }
+        catch (Exception ex)
+        {
+            Log($"Lỗi Touch Inject: {ex.Message}");
+        }
+    }
+
     public void StartStreaming(string? codec = null, int? bitrate = null)
     {
         StopStreaming();
@@ -197,7 +230,15 @@ public class AppController : IDisposable
         var selectedOpt = encoders.FirstOrDefault(e => e.Type.ToString().Equals(Settings.SelectedEncoderType, StringComparison.OrdinalIgnoreCase))
                           ?? encoders.First();
 
+        // Tự động áp dụng chế độ Extend / Mirror lên Windows qua CCD API (trích xuất từ CCDWrapper của Spacedesk)
+        if (Settings.AutoVirtualDisplay)
+        {
+            Display.ApplyModeToWindows(Settings.DisplayMode);
+        }
+
         int targetDisplay = Display.GetTargetDisplayIndex(Settings.DisplayMode);
+        var activeDisplays = Display.GetActiveDisplays();
+        _activeDisplayInfo = activeDisplays.FirstOrDefault(d => d.Index == targetDisplay) ?? activeDisplays.FirstOrDefault();
 
         var config = new VideoEncoderConfig
         {
@@ -221,10 +262,41 @@ public class AppController : IDisposable
         };
 
         _encoder.Start();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            _outputMonitor = new DxgiOutputMonitor(Display);
+            _outputMonitor.TargetDisplayGeometryChanged += updated =>
+            {
+                _activeDisplayInfo = updated;
+                Log($"Cập nhật tọa độ màn hình phụ: {updated.Width}x{updated.Height} tại ({updated.PositionX},{updated.PositionY})");
+            };
+            _outputMonitor.Start(targetDisplay);
+
+            if (Settings.EnableAudio)
+            {
+                _audioCapture = new WasapiLoopbackCapture();
+                _audioCapture.AudioFrameReady += (pcm, ts) => Server.SendAudioFrame(pcm, ts);
+                _audioCapture.LogMessage += msg => Log(msg);
+                _audioCapture.Start();
+            }
+        }
     }
 
     public void StopStreaming()
     {
+        if (_audioCapture != null)
+        {
+            _audioCapture.Stop();
+            _audioCapture.Dispose();
+            _audioCapture = null;
+        }
+        if (_outputMonitor != null)
+        {
+            _outputMonitor.Stop();
+            _outputMonitor.Dispose();
+            _outputMonitor = null;
+        }
         if (_encoder != null)
         {
             _encoder.Stop();

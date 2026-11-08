@@ -22,6 +22,7 @@ class UsbClient(
         fun onSessionConfig(width: Int, height: Int, fps: Int, codec: String, bitrate: Int)
         fun onVideoConfig(configData: ByteArray)
         fun onVideoFrame(frameData: ByteArray, isKeyframe: Boolean, timestampUs: Long)
+        fun onAudioFrame(audioData: ByteArray, timestampUs: Long) {}
         fun onPong(timestampUs: Long)
         fun onDisconnected()
     }
@@ -91,6 +92,13 @@ class UsbClient(
                 }
                 sendThread.start()
 
+                // Nâng ưu tiên luồng nhận lên tối đa (10) giống r2.m.a() của Spacedesk
+                try {
+                    Thread.currentThread().priority = Thread.MAX_PRIORITY
+                } catch (e: Exception) {
+                    // Ignore
+                }
+
                 // Main receive loop
                 while (isRunning) {
                     val pkt = Packet.read(inputStream!!) ?: break
@@ -130,6 +138,13 @@ class UsbClient(
                     val isKey = packet.payload[0].toInt() == 1
                     val nals = packet.payload.copyOfRange(1, packet.payload.size)
                     listener.onVideoFrame(nals, isKey, packet.timestampUs)
+                    // Gửi gói điều khiển luồng FRAME_ACK (tương tự k2.f() trong r2.l.f() của Spacedesk)
+                    sendPacket(Packet.createFrameAck(packet.timestampUs))
+                }
+            }
+            ProtocolConstants.TYPE_AUDIO_FRAME -> {
+                if (packet.payload.isNotEmpty()) {
+                    listener.onAudioFrame(packet.payload, packet.timestampUs)
                 }
             }
             ProtocolConstants.TYPE_PONG -> {
@@ -142,6 +157,11 @@ class UsbClient(
         if (isRunning) {
             sendQueue.offer(packet)
         }
+    }
+
+    fun sendTouch(action: Byte, pointerId: Int, normX: Float, normY: Float, pressure: Float = 1.0f) {
+        val pkt = Packet.createTouch(action, pointerId, normX, normY, pressure)
+        sendPacket(pkt)
     }
 
     fun close() {

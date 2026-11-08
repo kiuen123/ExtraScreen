@@ -19,11 +19,15 @@ public class StreamServer : IDisposable
     private Channel<Packet>? _sendChannel;
     private Task? _sendTask;
     private Task? _receiveTask;
+    private int _unackedFrames;
+    private bool _droppedSinceLastKeyframe;
 
     public event Action<HelloMessage>? ClientConnected;
     public event Action? ClientDisconnected;
     public event Action<StatsMessage>? StatsReceived;
+    public event Action<TouchEvent>? TouchReceived;
     public event Action? KeyframeRequested;
+    public event Action<long>? FrameAckReceived;
     public event Action<string>? LogMessage;
     public event Action<string>? ErrorOccurred;
 
@@ -81,7 +85,16 @@ public class StreamServer : IDisposable
 
     public void SendVideoFrame(byte[] nalUnits, bool isKeyframe, long timestampUs)
     {
+        if (isKeyframe)
+        {
+            _droppedSinceLastKeyframe = false;
+        }
         EnqueuePacket(Packet.CreateVideoFrame(nalUnits, isKeyframe, timestampUs));
+    }
+
+    public void SendAudioFrame(byte[] audioData, long timestampUs)
+    {
+        EnqueuePacket(Packet.CreateAudioFrame(audioData, timestampUs));
     }
 
     private void EnqueuePacket(Packet packet)
@@ -89,14 +102,25 @@ public class StreamServer : IDisposable
         var channel = _sendChannel;
         if (channel != null && IsClientConnected)
         {
-            // Drop delta frames if queue is backing up (>120 frames = ~2 seconds) to preserve low-latency glass-to-glass
-            if (channel.Reader.Count > 120 && packet.Type == ProtocolConstants.TypeVideoFrame)
+            // Kiểm soát luồng độ trễ thấp (học từ FLOW_CONTROL_ACK của Spacedesk):
+            // Nếu hàng đợi tích tụ > 6 gói hoặc client chưa ACK > 12 frames (~200ms), bỏ P-frame và yêu cầu IDR mới
+            if (packet.Type == ProtocolConstants.TypeVideoFrame)
             {
-                // Drop delta frame
-                if (packet.Payload.Length > 0 && packet.Payload[0] == 0)
+                bool isDeltaFrame = packet.Payload.Length > 0 && packet.Payload[0] == 0;
+                int queuedCount = channel.Reader.Count;
+                int inflight = Volatile.Read(ref _unackedFrames);
+
+                if (isDeltaFrame && (queuedCount > 6 || inflight > 12 || _droppedSinceLastKeyframe))
                 {
+                    if (!_droppedSinceLastKeyframe)
+                    {
+                        _droppedSinceLastKeyframe = true;
+                        KeyframeRequested?.Invoke();
+                    }
                     return;
                 }
+
+                Interlocked.Increment(ref _unackedFrames);
             }
             channel.Writer.TryWrite(packet);
         }
@@ -120,7 +144,9 @@ public class StreamServer : IDisposable
 
                 _currentClient = client;
                 _currentStream = client.GetStream();
-                _sendChannel = Channel.CreateBounded<Packet>(new BoundedChannelOptions(200)
+                Interlocked.Exchange(ref _unackedFrames, 0);
+                _droppedSinceLastKeyframe = false;
+                _sendChannel = Channel.CreateBounded<Packet>(new BoundedChannelOptions(32)
                 {
                     FullMode = BoundedChannelFullMode.DropOldest
                 });
@@ -214,6 +240,15 @@ public class StreamServer : IDisposable
                 KeyframeRequested?.Invoke();
                 break;
 
+            case ProtocolConstants.TypeFrameAck:
+                int remaining = Interlocked.Decrement(ref _unackedFrames);
+                if (remaining < 0)
+                {
+                    Interlocked.Exchange(ref _unackedFrames, 0);
+                }
+                FrameAckReceived?.Invoke(packet.TimestampUs);
+                break;
+
             case ProtocolConstants.TypePing:
                 long pingTs = packet.Payload.Length >= 8 
                     ? BinaryPrimitives.ReadInt64LittleEndian(packet.Payload) 
@@ -229,6 +264,18 @@ public class StreamServer : IDisposable
                 }
                 break;
 
+            case ProtocolConstants.TypeTouch:
+                try
+                {
+                    var touch = Packet.ParseTouch(packet.Payload);
+                    TouchReceived?.Invoke(touch);
+                }
+                catch (Exception ex)
+                {
+                    LogMessage?.Invoke($"Invalid touch event: {ex.Message}");
+                }
+                break;
+
             case ProtocolConstants.TypeBye:
                 var bye = packet.DeserializeJson<ByeMessage>();
                 LogMessage?.Invoke($"Client BYE: {bye?.Reason}");
@@ -239,13 +286,14 @@ public class StreamServer : IDisposable
 
     public void DisconnectCurrentClient()
     {
-        if (_currentClient == null) return;
+        var client = Interlocked.Exchange(ref _currentClient, null);
+        if (client == null) return;
 
         try
         {
             _sendChannel?.Writer.TryComplete();
             _currentStream?.Dispose();
-            _currentClient?.Dispose();
+            client.Dispose();
         }
         catch
         {
@@ -254,7 +302,6 @@ public class StreamServer : IDisposable
         finally
         {
             _currentStream = null;
-            _currentClient = null;
             _sendChannel = null;
             ConnectedClientInfo = null;
             ClientDisconnected?.Invoke();

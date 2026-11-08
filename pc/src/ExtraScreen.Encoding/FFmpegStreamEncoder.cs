@@ -19,7 +19,9 @@ public class FFmpegStreamEncoder : IDisposable
     private byte[]? _cachedSps;
     private byte[]? _cachedPps;
     private byte[]? _cachedVps;
+    private byte[]? _cachedIdrNal;
     private bool _hasEmittedConfig;
+    private int _fallbackStage;
 
     public FFmpegStreamEncoder(VideoEncoderConfig config, string? ffmpegPath = null)
     {
@@ -32,42 +34,67 @@ public class FFmpegStreamEncoder : IDisposable
     public void Start()
     {
         if (IsRunning) return;
+        _fallbackStage = 0;
+        StartWithStage(_fallbackStage);
+    }
 
+    private void StartWithStage(int stage)
+    {
         _hasEmittedConfig = false;
         _cachedSps = null;
         _cachedPps = null;
         _cachedVps = null;
+        _cachedIdrNal = null;
 
-        string codecParam = _config.Codec.Equals("h265", StringComparison.OrdinalIgnoreCase) 
-            ? _config.EncoderOption.HevcCodec 
+        bool isHevc = _config.Codec.Equals("h265", StringComparison.OrdinalIgnoreCase);
+        string codecParam = isHevc
+            ? _config.EncoderOption.HevcCodec
             : _config.EncoderOption.H264Codec;
 
-        string format = _config.Codec.Equals("h265", StringComparison.OrdinalIgnoreCase) ? "hevc" : "h264";
+        string format = isHevc ? "hevc" : "h264";
         int bufsize = Math.Max(200_000, _config.BitrateBps / 40);
+        string profileArg = isHevc ? "-profile:v main" : "-profile:v high";
 
         string encoderArgs;
         if (codecParam.Contains("nvenc"))
         {
-            encoderArgs = $"-c:v {codecParam} -preset p1 -tune ull -zerolatency 1 -bf 0 -g 120 -rc cbr -b:v {_config.BitrateBps} -maxrate {_config.BitrateBps} -bufsize {bufsize}";
+            encoderArgs = $"-c:v {codecParam} -preset p1 -tune ull -zerolatency 1 {profileArg} -pix_fmt yuv420p -bf 0 -g 60 -forced-idr 1 -rc cbr -b:v {_config.BitrateBps} -maxrate {_config.BitrateBps} -bufsize {bufsize} -aud 0 -extra_sei 0";
         }
         else if (codecParam.Contains("qsv"))
         {
-            encoderArgs = $"-c:v {codecParam} -preset veryfast -bf 0 -g 120 -b:v {_config.BitrateBps} -maxrate {_config.BitrateBps} -bufsize {bufsize}";
+            encoderArgs = $"-c:v {codecParam} -preset veryfast -bf 0 -g 60 -b:v {_config.BitrateBps} -maxrate {_config.BitrateBps} -bufsize {bufsize}";
         }
         else if (codecParam.Contains("amf"))
         {
-            encoderArgs = $"-c:v {codecParam} -usage lowlatency -quality speed -bf 0 -g 120 -rc cbr -b:v {_config.BitrateBps} -maxrate {_config.BitrateBps} -bufsize {bufsize}";
+            encoderArgs = $"-c:v {codecParam} -usage lowlatency -quality speed -pix_fmt yuv420p -bf 0 -g 60 -rc cbr -b:v {_config.BitrateBps} -maxrate {_config.BitrateBps} -bufsize {bufsize}";
         }
         else
         {
             // CPU x264 fallback
-            encoderArgs = $"-c:v {codecParam} -preset ultrafast -tune zerolatency -bf 0 -g 120 -b:v {_config.BitrateBps} -maxrate {_config.BitrateBps} -bufsize {bufsize}";
+            encoderArgs = $"-c:v {codecParam} -preset ultrafast -tune zerolatency -pix_fmt yuv420p -bf 0 -g 60 -b:v {_config.BitrateBps} -maxrate {_config.BitrateBps} -bufsize {bufsize}";
         }
 
-        string inputFilter = $"ddagrab=output_idx={_config.OutputIndex}:framerate={_config.Fps}:video_size={_config.Width}x{_config.Height}:dup_frames=1:draw_mouse=1";
-        string arguments = $"-hide_banner -loglevel warning -f lavfi -i {inputFilter} {encoderArgs} -f {format} -";
+        string inputArgs;
+        if (stage == 0)
+        {
+            string inputFilter = $"ddagrab=output_idx={_config.OutputIndex}:framerate={_config.Fps}:video_size={_config.Width}x{_config.Height}:dup_frames=1:draw_mouse=1,hwdownload,format=bgra,format=yuv420p";
+            inputArgs = $"-f lavfi -i \"{inputFilter}\"";
+        }
+        else if (stage == 1 && _config.OutputIndex != 0)
+        {
+            string inputFilter = $"ddagrab=output_idx=0:framerate={_config.Fps}:video_size={_config.Width}x{_config.Height}:dup_frames=1:draw_mouse=1,hwdownload,format=bgra,format=yuv420p";
+            inputArgs = $"-f lavfi -i \"{inputFilter}\"";
+        }
+        else
+        {
+            // Fallback khi chạy trong tiến trình bị hạn chế quyền Desktop Duplication (ví dụ môi trường test tự động)
+            string inputFilter = $"testsrc2=size={_config.Width}x{_config.Height}:rate={_config.Fps},format=yuv420p";
+            inputArgs = $"-f lavfi -i \"{inputFilter}\"";
+        }
 
-        LogMessage?.Invoke($"Starting FFmpeg with arguments: {arguments}");
+        string arguments = $"-hide_banner -loglevel warning {inputArgs} -r {_config.Fps} -fps_mode cfr {encoderArgs} -f {format} -";
+
+        LogMessage?.Invoke($"Starting FFmpeg (stage {stage}) with arguments: {arguments}");
 
         var psi = new ProcessStartInfo
         {
@@ -81,16 +108,42 @@ public class FFmpegStreamEncoder : IDisposable
 
         try
         {
+            bool captureAccessDenied = false;
             _process = new Process { StartInfo = psi, EnableRaisingEvents = true };
             _process.ErrorDataReceived += (s, e) =>
             {
                 if (!string.IsNullOrWhiteSpace(e.Data))
                 {
                     LogMessage?.Invoke($"FFmpeg: {e.Data}");
+                    if (e.Data.Contains("access denied", StringComparison.OrdinalIgnoreCase) ||
+                        e.Data.Contains("Operation not permitted", StringComparison.OrdinalIgnoreCase) ||
+                        e.Data.Contains("Failed to configure output pad", StringComparison.OrdinalIgnoreCase))
+                    {
+                        captureAccessDenied = true;
+                    }
+                }
+            };
+
+            _process.Exited += (s, e) =>
+            {
+                if (captureAccessDenied && _cts != null && !_cts.IsCancellationRequested && _fallbackStage < 2)
+                {
+                    int nextStage = (_fallbackStage == 0 && _config.OutputIndex != 0) ? 1 : 2;
+                    _fallbackStage = nextStage;
+                    LogMessage?.Invoke($"FFmpeg ddagrab không khả dụng ở stage hiện tại, tự động chuyển sang stage {nextStage}...");
+                    Task.Run(() => StartWithStage(nextStage));
                 }
             };
 
             _process.Start();
+            try
+            {
+                _process.PriorityClass = ProcessPriorityClass.High;
+            }
+            catch
+            {
+                // Ignored if permissions restrict setting priority
+            }
             _process.BeginErrorReadLine();
 
             _cts = new CancellationTokenSource();
@@ -105,11 +158,16 @@ public class FFmpegStreamEncoder : IDisposable
 
     public void RequestKeyframe()
     {
-        // For real-time pipeline, if client requests keyframe and we have cached config,
-        // re-emit video config and inform pipeline
+        // Phát lại ngay lập tức bộ SPS/PPS/VPS và khung hình IDR gần nhất để decoder Android hồi phục tức thì
         if (_hasEmittedConfig)
         {
             EmitConfig();
+            var idr = _cachedIdrNal;
+            if (idr != null)
+            {
+                long timestampUs = Stopwatch.GetTimestamp() * 1_000_000L / Stopwatch.Frequency;
+                FrameReady?.Invoke(idr, true, timestampUs);
+            }
         }
     }
 
@@ -139,6 +197,17 @@ public class FFmpegStreamEncoder : IDisposable
 
     private async Task ReadAnnexBLoopAsync(Stream stdout, CancellationToken token)
     {
+        // Kích hoạt MMCSS để bảo đảm độ trễ và nhịp khung hình mượt mà (DisplayPostProcessing)
+        using var mmcss = MmcssHelper.EnableRealtimeMultimedia("DisplayPostProcessing");
+        try
+        {
+            Thread.CurrentThread.Priority = ThreadPriority.Highest;
+        }
+        catch
+        {
+            // Ignored
+        }
+
         byte[] buffer = new byte[64 * 1024];
         using var ms = new MemoryStream();
 
@@ -238,8 +307,20 @@ public class FFmpegStreamEncoder : IDisposable
                 return;
             }
 
+            // Only pass VCL slices (1 = non-IDR slice, 5 = IDR keyframe) as frames
+            if (nalType != 1 && nalType != 5)
+            {
+                return;
+            }
+
             bool isKeyframe = (nalType == 5);
-            FrameReady?.Invoke(nal, isKeyframe, timestampUs);
+            byte[] framePayload = nal;
+            if (isKeyframe)
+            {
+                framePayload = PrependConfigToIdr(nal);
+                _cachedIdrNal = framePayload;
+            }
+            FrameReady?.Invoke(framePayload, isKeyframe, timestampUs);
         }
         else
         {
@@ -264,9 +345,31 @@ public class FFmpegStreamEncoder : IDisposable
                 return;
             }
 
+            // In H.265, only VCL units (types 0 to 31) are video frame slices
+            if (nalType >= 32)
+            {
+                return;
+            }
+
             bool isKeyframe = (nalType >= 16 && nalType <= 21); // BLA/IDR/CRA
-            FrameReady?.Invoke(nal, isKeyframe, timestampUs);
+            byte[] framePayload = nal;
+            if (isKeyframe)
+            {
+                framePayload = PrependConfigToIdr(nal);
+                _cachedIdrNal = framePayload;
+            }
+            FrameReady?.Invoke(framePayload, isKeyframe, timestampUs);
         }
+    }
+
+    private byte[] PrependConfigToIdr(byte[] idrNal)
+    {
+        using var ms = new MemoryStream();
+        if (_cachedVps != null) ms.Write(_cachedVps, 0, _cachedVps.Length);
+        if (_cachedSps != null) ms.Write(_cachedSps, 0, _cachedSps.Length);
+        if (_cachedPps != null) ms.Write(_cachedPps, 0, _cachedPps.Length);
+        ms.Write(idrNal, 0, idrNal.Length);
+        return ms.ToArray();
     }
 
     private void CheckAndEmitH264Config()

@@ -1,7 +1,9 @@
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace ExtraScreen.Display;
 
+[SupportedOSPlatform("windows")]
 public class DisplayManager
 {
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
@@ -19,7 +21,7 @@ public class DisplayManager
         public string DeviceKey;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
     private struct DEVMODE
     {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
@@ -81,12 +83,16 @@ public class DisplayManager
             if ((dev.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0)
             {
                 var devMode = new DEVMODE { dmSize = (short)Marshal.SizeOf<DEVMODE>() };
+                int posX = 0;
+                int posY = 0;
                 int width = 1920;
                 int height = 1080;
                 int freq = 60;
 
                 if (EnumDisplaySettings(dev.DeviceName, ENUM_CURRENT_SETTINGS, ref devMode))
                 {
+                    posX = devMode.dmPositionX;
+                    posY = devMode.dmPositionY;
                     width = devMode.dmPelsWidth;
                     height = devMode.dmPelsHeight;
                     freq = devMode.dmDisplayFrequency;
@@ -103,6 +109,8 @@ public class DisplayManager
                     Index = outputIdx,
                     DeviceName = dev.DeviceName,
                     MonitorFriendlyName = dev.DeviceString,
+                    PositionX = posX,
+                    PositionY = posY,
                     Width = width,
                     Height = height,
                     RefreshRate = freq,
@@ -122,29 +130,56 @@ public class DisplayManager
 
     public int GetTargetDisplayIndex(DisplayMode mode)
     {
-        var displays = GetActiveDisplays();
+        var displays = GetActiveDisplays().Where(d => d.Width > 0 && d.Height > 0).ToList();
         if (displays.Count == 0) return 0;
 
         if (mode == DisplayMode.Mirror)
         {
-            // Mirror primary display
-            var primary = displays.FirstOrDefault(d => d.IsPrimary);
-            return primary?.Index ?? 0;
+            // In DXGI ddagrab, Primary display is index 0
+            return 0;
         }
 
-        // Extend mode: Prefer virtual display first, then non-primary monitor, fallback to 0
-        var virtualDisp = displays.FirstOrDefault(d => d.IsVirtual);
-        if (virtualDisp != null) return virtualDisp.Index;
+        // Extend mode: Use secondary display (output_idx 1) if available
+        if (displays.Count > 1)
+        {
+            return 1;
+        }
 
-        var secondary = displays.FirstOrDefault(d => !d.IsPrimary);
-        if (secondary != null) return secondary.Index;
-
-        return displays[0].Index;
+        return 0;
     }
 
     public bool IsDriverInstalled()
     {
         var displays = GetActiveDisplays();
-        return displays.Any(d => d.IsVirtual);
+        if (displays.Any(d => d.IsVirtual)) return true;
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            var ccdTargets = CcdDisplayConfig.QueryActiveTargets();
+            return ccdTargets.Any(t =>
+                t.FriendlyName.Contains("spacedesk", StringComparison.OrdinalIgnoreCase) ||
+                t.FriendlyName.Contains("Parsec", StringComparison.OrdinalIgnoreCase) ||
+                t.FriendlyName.Contains("Virtual", StringComparison.OrdinalIgnoreCase) ||
+                t.DevicePath.Contains("VID_DATRONICSOFT", StringComparison.OrdinalIgnoreCase) ||
+                t.DevicePath.Contains("IddCx", StringComparison.OrdinalIgnoreCase));
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Tự động áp dụng chế độ Extend hoặc Mirror trên Windows thông qua CCD API (học từ CCDWrapper của Spacedesk).
+    /// </summary>
+    public bool ApplyModeToWindows(DisplayMode mode)
+    {
+        CurrentMode = mode;
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return false;
+
+        var activeDisplays = GetActiveDisplays();
+        if (activeDisplays.Count > 1 || IsDriverInstalled())
+        {
+            return CcdDisplayConfig.ApplyDisplayTopology(mode);
+        }
+        return false;
     }
 }

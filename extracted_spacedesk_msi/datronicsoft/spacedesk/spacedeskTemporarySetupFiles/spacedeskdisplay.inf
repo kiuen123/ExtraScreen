@@ -1,0 +1,189 @@
+; spacedeskDisplay.inf
+; Copyright © 2025 datronicsoft;
+; All rights reserved
+
+[Version]
+PnpLockdown=1
+Signature="$Windows NT$"
+Class=Display
+ClassGuid={4d36e968-e325-11ce-bfc1-08002be10318}
+ClassVer=2.0
+Provider=%ManufacturerName%
+CatalogFile=spacedeskDisplay.cat
+DriverVer = 06/02/2025,10.2.398.176
+
+[ControlFlags]
+ExcludeFromSelect =*
+
+[DestinationDirs]
+spacedesk.DisplayUmd = 12,UMDF          ; drivers\UMDF
+spacedesk.DisplayUmd.1.4 = 12,UMDF      ; drivers\UMDF
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTx86,ntamd64,NTx86.10.0...18362,ntamd64.10.0...18362,NTx86.10.0...22000,ntamd64.10.0...22000,ntarm64.10.0...22000
+
+[Standard.NTx86]
+%DeviceName%= v3DDKIndirect10_Install, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the spacedesk virtual Bus
+%DeviceName%= v3DDKIndirect10_Install, VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the Microsoft software bus
+[Standard.NtAMD64]
+%DeviceName%= v3DDKIndirect10_Install, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the spacedesk virtual Bus
+%DeviceName%= v3DDKIndirect10_Install, VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the Microsoft software bus
+
+[Standard.NTx86.10.0...18362]
+%DeviceName%= v3DDKIndirect14_Install_W10, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the spacedesk virtual Bus
+%DeviceName%= v3DDKIndirect14_Install_W10, VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the Microsoft software bus
+[Standard.ntamd64.10.0...18362]
+%DeviceName%= v3DDKIndirect14_Install_W10, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the spacedesk virtual Bus
+%DeviceName%= v3DDKIndirect14_Install_W10, VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the Microsoft software bus
+
+[Standard.NTx86.10.0...22000] ; Workaround for failing INF verification in Microsoft Dashboard
+%DeviceName%= v3DDKIndirect14_Install_W11, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the spacedesk virtual Bus
+%DeviceName%= v3DDKIndirect14_Install_W11, VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the Microsoft software bus
+[Standard.ntamd64.10.0...22000] ; Workaround for failing INF verification in Microsoft Dashboard
+%DeviceName%= v3DDKIndirect14_Install_W11, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the spacedesk virtual Bus
+%DeviceName%= v3DDKIndirect14_Install_W11, VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the Microsoft software bus
+[Standard.ntarm64.10.0...22000]
+%DeviceName%= v3DDKIndirect14_Install_W11, {0511CEC1-0EB4-4ADE-9284-CD36606C3906}\VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the spacedesk virtual Bus
+%DeviceName%= v3DDKIndirect14_Install_W11, VID_DATRONICSOFT_PID_SPACEDESK_VIRTUAL_DISPLAY_0003 ; Install underneath the Microsoft software bus
+
+;
+; ================================== UMDF Device ==================================
+;
+;
+; === IddCx 1.4 - Windows 11 ===
+;
+[v3DDKIndirect14_Install_W11.NT]
+CopyFiles=spacedesk.DisplayUmd.1.4
+CopyINF=spacedeskDisplay.inf
+
+[v3DDKIndirect14_Install_W11.NT.hw]
+Include=WUDFRD.inf
+Needs=WUDFRD.NT.HW
+AddReg = HardwareKey_AddReg
+
+[v3DDKIndirect14_Install_W11.NT.Services]
+Include=WUDFRD.inf
+Needs=WUDFRD.NT.Services
+
+[v3DDKIndirect14_Install_W11.NT.Wdf]
+;UmdfDispatcher=NativeUSB
+UmdfService=%ServiceName%,v3DDKIndirect14_Install
+UmdfServiceOrder=%ServiceName%
+UmdfKernelModeClientPolicy = AllowKernelModeClients
+UmdfMethodNeitherAction	= Copy
+UmdfFileObjectPolicy = AllowNullAndUnknownFileObjects
+UmdfHostProcessSharing = ProcessSharingDisabled
+
+;
+; === IddCx 1.4 - Windows 10 1903 and above ===
+;
+[v3DDKIndirect14_Install_W10.NT]
+CopyFiles=spacedesk.DisplayUmd.1.4
+CopyINF=spacedeskDisplay.inf
+
+[v3DDKIndirect14_Install_W10.NT.hw]
+AddReg=HardwareKey_AddReg
+
+[v3DDKIndirect14_Install_W10.NT.Wdf]
+;UmdfDispatcher=NativeUSB
+UmdfService=%ServiceName%,v3DDKIndirect14_Install
+UmdfServiceOrder=%ServiceName%
+UmdfKernelModeClientPolicy = AllowKernelModeClients
+UmdfMethodNeitherAction	= Copy
+UmdfFileObjectPolicy = AllowNullAndUnknownFileObjects
+UmdfHostProcessSharing = ProcessSharingDisabled
+
+[v3DDKIndirect14_Install_W10.NT.services]
+AddService = WUDFRd,0x000001fa,WUDFRD_ServiceInstall
+
+[v3DDKIndirect14_Install]
+UmdfLibraryVersion=2.25.0
+ServiceBinary=%12%\UMDF\spacedeskDisplayUmode1_4.dll
+UmdfExtensions=IddCx0102
+
+;
+; === IddCx 1.0 - Windows 10 1607 to 1809 ===
+;
+[v3DDKIndirect10_Install.NT]
+CopyFiles=spacedesk.DisplayUmd
+CopyINF=spacedeskDisplay.inf
+
+[v3DDKIndirect10_Install.NT.hw]
+AddReg=HardwareKey_AddReg
+
+[v3DDKIndirect10_Install.NT.Wdf]
+;UmdfDispatcher=NativeUSB
+UmdfService=%ServiceName%,v3DDKIndirect10_Install
+UmdfServiceOrder=%ServiceName%
+UmdfKernelModeClientPolicy = AllowKernelModeClients
+UmdfMethodNeitherAction	= Copy
+UmdfFileObjectPolicy = AllowNullAndUnknownFileObjects
+UmdfHostProcessSharing = ProcessSharingDisabled
+
+[v3DDKIndirect10_Install]
+UmdfLibraryVersion=2.15.0
+ServiceBinary=%12%\UMDF\spacedeskDisplayUmode1_0.dll
+UmdfExtensions=IddCx0102
+
+[v3DDKIndirect10_Install.NT.services]
+AddService=WUDFRd,0x000001fa,WUDFRD_ServiceInstall
+
+;
+; === Install sections for all platforms ===
+;
+[HardwareKey_AddReg]
+HKR,,FriendlyName,,%DeviceName%
+HKR,,"UpperFilters", %REG_MULTI_SZ%, "IndirectKmd"
+HKR,"WUDF","DeviceGroupId",0x00000000,"v3DDKIndirectGroup"
+HKR,,DeviceCharacteristics,0x10001,0x100
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)"
+;HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GA;;;WD)(A;;GA;;;RC)"  ;for lower security
+HKR,%ServiceName%,StaticDesktopReEncodeFrameCount,0x00010001,1
+
+[WUDFRD_ServiceInstall]
+DisplayName = %WudfRdDisplayName%
+ServiceType = 1
+StartType = 3
+ErrorControl = 1
+ServiceBinary = %12%\WUDFRd.sys
+
+;
+; Device Cleanup
+;
+[DefaultUninstall]
+DelFiles= spacedesk.DisplayUmd, spacedesk.DisplayUmd.1.4
+
+;
+; file section
+;
+[spacedesk.DisplayUmd]
+spacedeskDisplayUmode1_0.dll
+
+[spacedesk.DisplayUmd.1.4]
+spacedeskDisplayUmode1_4.dll
+
+[SourceDisksNames.x86]
+1 = %DISKID1%,,,\x86
+
+[SourceDisksNames.amd64]
+1 = %DISKID1%,,, \amd64
+
+[SourceDisksNames.arm64]
+1 = %DISKID1%,,, \arm64
+
+[SourceDisksFiles]
+spacedeskDisplayUmode1_0.dll = 1
+spacedeskDisplayUmode1_4.dll = 1
+
+;
+; ================================== Generic ==================================
+;
+[Strings]
+ManufacturerName="datronicsoft"
+DISKID1 = "spacedesk virtual Graphics Adapter Driver Setup Disk"
+WudfRdDisplayName="Windows Driver Foundation - User-mode Driver Framework Reflector"
+DeviceName="spacedesk Graphics Adapter"
+ServiceName ="spacedeskDisplayUmode"
+
+REG_MULTI_SZ = 0x00010000
+

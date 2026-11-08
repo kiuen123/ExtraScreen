@@ -1,0 +1,103 @@
+; Installation INF for spacedesk Android USB cable direct connection 
+; Processor support for x86/x64 based platforms.
+;
+; (c) Copyright 2022-2099 datronicsoft Technology GmbH
+;
+; spacedeskDriverAndroidControl.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class = System
+ClassGuid = {4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider=%ManufacturerName%
+CatalogFile=spacedeskDriverAndroidControl.cat
+DriverVer = 07/03/2025,1.0.481.12
+PnpLockDown=1
+
+[ControlFlags]
+ExcludeFromSelect =*
+
+[DestinationDirs]
+DefaultDestDir = 12
+spacedeskDriverAndroidControl_Device_CoInstaller_CopyFiles = 11
+CoInstallers_CopyFiles=11
+
+[SourceDisksNames.x86]
+1 = %DiskName%,,,\x86
+
+[SourceDisksNames.amd64]
+1 = %DiskName%,,,\amd64
+
+[SourceDisksNames.arm64]
+1 = %DiskName%,,,\arm64
+
+[SourceDisksFiles]
+spacedeskDriverAndroidControl.sys  = 1,,
+;
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTx86,ntamd64,ntarm64.10.0...22000
+
+[Standard.NTx86]
+%spacedeskDriverAndroidControl.DeviceDesc%=spacedeskDriverAndroidControl_Device, ROOT\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001
+
+[Standard.NTamd64]
+%spacedeskDriverAndroidControl.DeviceDesc%=spacedeskDriverAndroidControl_Device, ROOT\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001
+
+[Standard.ntarm64.10.0...22000]
+%spacedeskDriverAndroidControl.DeviceDesc%=spacedeskDriverAndroidControl_Device, ROOT\VID_DATRONICSOFT_PID_SPACEDESK_DRIVER_USB_ANDROID_0001
+
+[spacedeskDriverAndroidControl_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+spacedeskDriverAndroidControl.sys
+
+[spacedeskDriverAndroidControl_Device.NT.HW]
+AddReg=spacedeskDriverAndroidControl_AddReg
+
+[spacedeskDriverAndroidControl_AddReg]
+; By default, USBDevice class uses iProduct descriptor to name the device in
+; Device Manager on Windows 8 and higher.
+; Uncomment for this device to use %DeviceName% on Windows 8 and higher:
+HKR,,FriendlyName,,%spacedeskDriverAndroidControl.DeviceDesc%
+HKR,,Security,,"D:P(A;;GA;;;BA)(A;;GA;;;SY)"      ; Allow generic-all access to Built-in administrators and Local system 
+
+;-------------- Service installation
+[spacedeskDriverAndroidControl_Device.NT.Services]
+AddService = spacedeskDriverAndroidControl,%SPSVCINST_ASSOCSERVICE%, spacedeskDriverAndroidControl_Service_Inst
+
+; -------------- spacedeskDriverAndroidControl driver install sections
+[spacedeskDriverAndroidControl_Service_Inst]
+DisplayName    = %spacedeskDriverAndroidControl.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\spacedeskDriverAndroidControl.sys
+
+;
+;--- spacedeskDriverAndroidControl_Device Coinstaller installation ------
+;
+
+[spacedeskDriverAndroidControl_Device.NT.CoInstallers]
+AddReg=spacedeskDriverAndroidControl_Device_CoInstaller_AddReg
+CopyFiles=spacedeskDriverAndroidControl_Device_CoInstaller_CopyFiles
+
+[spacedeskDriverAndroidControl_Device_CoInstaller_AddReg]
+;
+
+[spacedeskDriverAndroidControl_Device_CoInstaller_CopyFiles]
+;
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="datronicsoft Technology GmbH"
+DiskName = "spacedeskDriverAndroidControl Installation Disk"
+spacedeskDriverAndroidControl.DeviceDesc = "spacedesk Android Control"
+spacedeskDriverAndroidControl.SVCDESC = "spacedesk Android Control Service"
+REG_MULTI_SZ = 0x00010000

@@ -13,6 +13,8 @@ public class DisplayOutputInfo
     public int Index { get; set; }
     public string DeviceName { get; set; } = string.Empty;
     public string MonitorFriendlyName { get; set; } = string.Empty;
+    public int PositionX { get; set; }
+    public int PositionY { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
     public int RefreshRate { get; set; }

@@ -6,6 +6,8 @@ public class UsbDeviceWatcher
     private CancellationTokenSource? _cts;
     private Task? _monitorTask;
     private readonly Dictionary<string, DeviceState> _lastKnownDevices = new();
+    private readonly Dictionary<string, int> _missingPollCounts = new();
+    private const int DisconnectThreshold = 3; // Must be missing 3 consecutive seconds to declare disconnected
 
     public event Action<AdbDeviceInfo>? DeviceConnected;
     public event Action<AdbDeviceInfo>? DeviceUnauthorized;
@@ -38,12 +40,16 @@ public class UsbDeviceWatcher
         {
             try
             {
-                var currentDevices = await _adbClient.GetDevicesAsync(token).ConfigureAwait(false);
+                var allDevices = await _adbClient.GetDevicesAsync(token).ConfigureAwait(false);
+                // Filter out emulator devices and offline ghosts
+                var currentDevices = allDevices.Where(d => !d.Serial.StartsWith("emulator-", StringComparison.OrdinalIgnoreCase)).ToList();
                 var currentMap = currentDevices.ToDictionary(d => d.Serial, d => d);
 
                 // Detect new or state-changed devices
                 foreach (var device in currentDevices)
                 {
+                    _missingPollCounts[device.Serial] = 0; // Reset missing count
+
                     if (!_lastKnownDevices.TryGetValue(device.Serial, out var lastState) || lastState != device.State)
                     {
                         _lastKnownDevices[device.Serial] = device.State;
@@ -58,12 +64,23 @@ public class UsbDeviceWatcher
                     }
                 }
 
-                // Detect disconnected devices
-                var disconnected = _lastKnownDevices.Keys.Where(s => !currentMap.ContainsKey(s)).ToList();
-                foreach (var serial in disconnected)
+                // Debounced detection for disconnected devices
+                var knownSerials = _lastKnownDevices.Keys.ToList();
+                foreach (var serial in knownSerials)
                 {
-                    _lastKnownDevices.Remove(serial);
-                    DeviceDisconnected?.Invoke(serial);
+                    if (!currentMap.ContainsKey(serial))
+                    {
+                        _missingPollCounts.TryGetValue(serial, out int count);
+                        count++;
+                        _missingPollCounts[serial] = count;
+
+                        if (count >= DisconnectThreshold)
+                        {
+                            _lastKnownDevices.Remove(serial);
+                            _missingPollCounts.Remove(serial);
+                            DeviceDisconnected?.Invoke(serial);
+                        }
+                    }
                 }
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -72,7 +89,7 @@ public class UsbDeviceWatcher
             }
             catch
             {
-                // ADB server might be temporarily busy or restarting
+                // ADB server might be temporarily busy or restarting; do not flap
             }
 
             try

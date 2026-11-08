@@ -83,4 +83,59 @@ public class ProtocolTests
         Assert.Equal(9876543210L, readPacket.TimestampUs);
         Assert.Equal(8, readPacket.Payload.Length);
     }
+
+    [Fact]
+    public void TestTouchPacketSerialization()
+    {
+        var packet = Packet.CreateTouch(
+            action: ProtocolConstants.TouchActionMove,
+            pointerId: 2,
+            normX: 0.75f,
+            normY: 0.5f,
+            pressure: 0.8f,
+            timestampUs: 555555L
+        );
+
+        Assert.Equal(ProtocolConstants.TypeTouch, packet.Type);
+        Assert.Equal(555555L, packet.TimestampUs);
+        Assert.Equal(17, packet.Payload.Length);
+
+        var touch = Packet.ParseTouch(packet.Payload);
+        Assert.Equal(ProtocolConstants.TouchActionMove, touch.Action);
+        Assert.Equal(2, touch.PointerId);
+        Assert.Equal(0.75f, touch.NormX);
+        Assert.Equal(0.5f, touch.NormY);
+        Assert.Equal(0.8f, touch.Pressure);
+    }
+
+    [Fact]
+    public async Task TestFrameAckAndAudioPacketSerialization()
+    {
+        var ack = Packet.CreateFrameAck(11223344L);
+        Assert.Equal(ProtocolConstants.TypeFrameAck, ack.Type);
+        Assert.Equal(11223344L, ack.TimestampUs);
+        Assert.Empty(ack.Payload);
+
+        byte[] samplePcm = new byte[] { 0x10, 0x00, 0x20, 0x00, 0x30, 0x00, 0x40, 0x00 };
+        var audio = Packet.CreateAudioFrame(samplePcm, 99887766L);
+        Assert.Equal(ProtocolConstants.TypeAudioFrame, audio.Type);
+        Assert.Equal(99887766L, audio.TimestampUs);
+        Assert.Equal(samplePcm, audio.Payload);
+
+        using var ms = new MemoryStream();
+        await PacketSerializer.WritePacketAsync(ms, ack);
+        await PacketSerializer.WritePacketAsync(ms, audio);
+
+        ms.Position = 0;
+        var readAck = await PacketSerializer.ReadPacketAsync(ms);
+        var readAudio = await PacketSerializer.ReadPacketAsync(ms);
+
+        Assert.NotNull(readAck);
+        Assert.Equal(ProtocolConstants.TypeFrameAck, readAck.Type);
+        Assert.Equal(11223344L, readAck.TimestampUs);
+
+        Assert.NotNull(readAudio);
+        Assert.Equal(ProtocolConstants.TypeAudioFrame, readAudio.Type);
+        Assert.Equal(samplePcm, readAudio.Payload);
+    }
 }
